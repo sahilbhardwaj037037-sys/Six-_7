@@ -17,7 +17,7 @@ export function ProductCard({ product }: ProductCardProps) {
     <div className="group flex flex-col">
       {/* Image Container */}
       <div className="relative aspect-[4/5] w-full bg-[#F5F5F5] overflow-hidden">
-        <Link href={`/shop/${product.slug}`} className="block w-full h-full">
+        <Link href={`/product/${product.slug}`} className="relative block w-full h-full">
           <Image
             src={product.imageUrl}
             alt={product.name}
@@ -29,7 +29,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
         {/* Badge */}
         {product.badge && (
-          <span className="absolute top-3 left-3 text-[10px] font-mono tracking-widest uppercase bg-white/95 text-neutral-900 px-2 py-0.5 border border-neutral-200 pointer-events-none">
+          <span className="absolute top-3 left-3 text-[10px] font-mono tracking-widest uppercase bg-white/95 text-neutral-900 px-2 py-0.5 border border-neutral-200 pointer-events-none z-10">
             {product.badge}
           </span>
         )}
@@ -41,7 +41,7 @@ export function ProductCard({ product }: ProductCardProps) {
             e.preventDefault();
             setIsWishlisted(!isWishlisted);
           }}
-          className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center text-neutral-800 hover:text-black hover:bg-white transition-all shadow-sm"
+          className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center text-neutral-800 hover:text-black hover:bg-white transition-all shadow-sm z-10"
           aria-label={`Save ${product.name} to wishlist`}
         >
           <Heart
@@ -72,7 +72,7 @@ export function ProductCard({ product }: ProductCardProps) {
             </div>
           </div>
 
-          <Link href={`/shop/${product.slug}`}>
+          <Link href={`/product/${product.slug}`}>
             <h3 className="text-sm font-medium text-neutral-900 mt-1 uppercase tracking-tight group-hover:text-neutral-500 transition-colors">
               {product.name}
             </h3>
