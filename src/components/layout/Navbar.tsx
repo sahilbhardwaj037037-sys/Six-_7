@@ -1,34 +1,86 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { Search, ShoppingBag, User, Heart, Menu, X } from "lucide-react";
+import { Search, ShoppingBag, User, Heart, Menu, X, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { MEGA_MENU_DATA, MegaMenuContent } from "@/data/mega-menu-data";
+import { MegaMenu } from "./MegaMenu";
 
-const NAV_LINKS = [
+const PRIMARY_LINKS = [
   { name: "Home", href: "/" },
-  { name: "Shop", href: "/shop" },
-  { name: "Men", href: "/men" },
-  { name: "Women", href: "/women" },
-  { name: "Kids", href: "/kids" },
-  { name: "Sports", href: "/sports" },
-  { name: "New Arrivals", href: "#new-arrivals" },
-  { name: "Best Sellers", href: "#best-sellers" },
-  { name: "Offers", href: "#offers" },
+  { name: "Shop", href: "/shop", hasMegaMenu: true },
+  { name: "Men", href: "/men", hasMegaMenu: true },
+  { name: "Women", href: "/women", hasMegaMenu: true },
+  { name: "Kids", href: "/kids", hasMegaMenu: true },
+  { name: "Sports", href: "/sports", hasMegaMenu: true },
+  { name: "New Arrivals", href: "#new-arrivals", hasMegaMenu: true },
+  { name: "Best Sellers", href: "#best-sellers", hasMegaMenu: true },
+  { name: "Offers", href: "#offers", hasMegaMenu: true },
 ];
 
 export function Navbar() {
+  const [activeMenuKey, setActiveMenuKey] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileExpandedSection, setMobileExpandedSection] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
 
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleMouseEnter = (key: string) => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    if (MEGA_MENU_DATA[key]) {
+      setActiveMenuKey(key);
+    } else {
+      setActiveMenuKey(null);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    timeoutRef.current = setTimeout(() => {
+      setActiveMenuKey(null);
+    }, 180);
+  };
+
+  const handleMenuClose = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    setActiveMenuKey(null);
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        handleMenuClose();
+        setSearchOpen(false);
+        setMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  const activeContent: MegaMenuContent | null = activeMenuKey
+    ? MEGA_MENU_DATA[activeMenuKey] || null
+    : null;
+
   return (
-    <header className="sticky top-0 z-50 bg-[#FBFBFB]/90 backdrop-blur-md border-b border-neutral-200/80 transition-all">
+    <header
+      className="sticky top-0 z-50 bg-[#FBFBFB]/95 backdrop-blur-md border-b border-neutral-200/80 transition-all"
+      onMouseLeave={handleMouseLeave}
+    >
       {/* Top Banner Announcement */}
       <div className="bg-[#111111] text-[#FBFBFB] text-[11px] font-mono tracking-widest uppercase py-2 px-4 text-center">
         <span>Complimentary Express Delivery on Global Orders Over $300</span>
       </div>
 
-      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between relative">
         {/* Mobile Hamburger */}
         <button
           type="button"
@@ -42,6 +94,7 @@ export function Navbar() {
         {/* Brand Logo / Wordmark */}
         <Link
           href="/"
+          onClick={handleMenuClose}
           className="flex items-center gap-1 font-mono text-2xl font-bold tracking-tighter text-[#111111] uppercase select-none hover:opacity-85 transition-opacity"
         >
           <span>Six</span>
@@ -50,23 +103,43 @@ export function Navbar() {
         </Link>
 
         {/* Desktop Navigation Links */}
-        <div className="hidden lg:flex items-center gap-7">
-          {NAV_LINKS.map((link) => (
-            <Link
-              key={link.name}
-              href={link.href}
-              className="text-[13px] font-medium tracking-wide uppercase text-neutral-600 hover:text-[#111111] transition-colors"
-            >
-              {link.name}
-            </Link>
-          ))}
+        <div className="hidden lg:flex items-center gap-6 xl:gap-7 h-full">
+          {PRIMARY_LINKS.map((link) => {
+            const isActive = activeMenuKey === link.name;
+            return (
+              <div
+                key={link.name}
+                className="h-full flex items-center"
+                onMouseEnter={() => handleMouseEnter(link.name)}
+              >
+                <Link
+                  href={link.href}
+                  className={`relative text-[13px] font-medium tracking-wide uppercase transition-colors py-2 ${
+                    isActive ? "text-neutral-950 font-semibold" : "text-neutral-600 hover:text-[#111111]"
+                  }`}
+                >
+                  {link.name}
+                  {isActive && (
+                    <motion.div
+                      layoutId="nav-indicator"
+                      className="absolute bottom-0 left-0 right-0 h-[2px] bg-neutral-950"
+                      transition={{ duration: 0.15 }}
+                    />
+                  )}
+                </Link>
+              </div>
+            );
+          })}
         </div>
 
         {/* Action Affordances (Search, Wishlist, Account, Cart) */}
         <div className="flex items-center gap-3 sm:gap-4">
           <button
             type="button"
-            onClick={() => setSearchOpen(!searchOpen)}
+            onClick={() => {
+              setSearchOpen(!searchOpen);
+              handleMenuClose();
+            }}
             className="p-2 text-neutral-700 hover:text-black transition-colors"
             aria-label="Search collection"
           >
@@ -102,7 +175,23 @@ export function Navbar() {
         </div>
       </nav>
 
-      {/* Expandable Search Overlay Affordance */}
+      {/* Desktop Mega-Menu Panel */}
+      <AnimatePresence>
+        {activeContent && (
+          <div
+            onMouseEnter={() => {
+              if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+              }
+            }}
+            onMouseLeave={handleMouseLeave}
+          >
+            <MegaMenu content={activeContent} onClose={handleMenuClose} />
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Expandable Search Drawer */}
       <AnimatePresence>
         {searchOpen && (
           <motion.div
@@ -132,7 +221,7 @@ export function Navbar() {
         )}
       </AnimatePresence>
 
-      {/* Mobile Drawer Navigation */}
+      {/* Mobile Accordion Drawer */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <>
@@ -147,8 +236,8 @@ export function Navbar() {
               initial={{ x: "-100%" }}
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
-              transition={{ type: "tween", duration: 0.3 }}
-              className="fixed inset-y-0 left-0 w-4/5 max-w-sm bg-[#FBFBFB] z-50 p-6 flex flex-col justify-between border-r border-neutral-200 shadow-2xl lg:hidden"
+              transition={{ type: "tween", duration: 0.25 }}
+              className="fixed inset-y-0 left-0 w-4/5 max-w-sm bg-[#FBFBFB] z-50 p-6 flex flex-col justify-between border-r border-neutral-200 shadow-2xl lg:hidden overflow-y-auto"
             >
               <div>
                 <div className="flex items-center justify-between pb-6 border-b border-neutral-200">
@@ -164,21 +253,85 @@ export function Navbar() {
                   </button>
                 </div>
 
-                <div className="flex flex-col gap-5 mt-8">
-                  {NAV_LINKS.map((link) => (
-                    <Link
-                      key={link.name}
-                      href={link.href}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="text-base font-medium tracking-wide uppercase text-neutral-800 hover:text-black transition-colors"
-                    >
-                      {link.name}
-                    </Link>
-                  ))}
+                {/* Mobile Navigation with Accordions */}
+                <div className="flex flex-col divide-y divide-neutral-200/70 mt-6">
+                  {PRIMARY_LINKS.map((link) => {
+                    const menuData = MEGA_MENU_DATA[link.name];
+                    const isExpanded = mobileExpandedSection === link.name;
+
+                    if (!menuData) {
+                      return (
+                        <div key={link.name} className="py-3">
+                          <Link
+                            href={link.href}
+                            onClick={() => setMobileMenuOpen(false)}
+                            className="text-sm font-medium tracking-wide uppercase text-neutral-800 hover:text-black"
+                          >
+                            {link.name}
+                          </Link>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div key={link.name} className="py-3">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setMobileExpandedSection(isExpanded ? null : link.name)
+                          }
+                          className="w-full flex items-center justify-between text-left text-sm font-medium tracking-wide uppercase text-neutral-800 hover:text-black"
+                        >
+                          <span>{link.name}</span>
+                          <ChevronDown
+                            className={`w-4 h-4 text-neutral-400 transition-transform duration-200 ${
+                              isExpanded ? "rotate-180" : ""
+                            }`}
+                          />
+                        </button>
+
+                        <AnimatePresence>
+                          {isExpanded && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: "auto", opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.2 }}
+                              className="overflow-hidden pl-3 pt-3 flex flex-col gap-3"
+                            >
+                              <Link
+                                href={link.href}
+                                onClick={() => setMobileMenuOpen(false)}
+                                className="text-xs font-mono uppercase tracking-wider text-neutral-900 font-semibold underline underline-offset-4"
+                              >
+                                View All {link.name}
+                              </Link>
+                              {menuData.sections.flatMap((sec) => sec.items).map((item, idx) => (
+                                <Link
+                                  key={idx}
+                                  href={item.href}
+                                  onClick={() => setMobileMenuOpen(false)}
+                                  className="text-xs font-light text-neutral-600 hover:text-black flex items-center justify-between pr-2"
+                                >
+                                  <span>{item.name}</span>
+                                  {item.badge && (
+                                    <span className="text-[9px] font-mono uppercase px-1.5 py-0.2 bg-neutral-200 text-neutral-800">
+                                      {item.badge}
+                                    </span>
+                                  )}
+                                </Link>
+                              ))}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
-              <div className="pt-6 border-t border-neutral-200 flex flex-col gap-4 text-sm text-neutral-600">
+              {/* Bottom Drawer Actions */}
+              <div className="pt-6 mt-6 border-t border-neutral-200 flex flex-col gap-4 text-sm text-neutral-600">
                 <Link
                   href="/account"
                   onClick={() => setMobileMenuOpen(false)}
