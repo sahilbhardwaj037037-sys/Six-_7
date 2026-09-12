@@ -14,9 +14,9 @@ const PRIMARY_LINKS = [
   { name: "Women", href: "/women", hasMegaMenu: true },
   { name: "Kids", href: "/kids", hasMegaMenu: true },
   { name: "Sports", href: "/sports", hasMegaMenu: true },
-  { name: "New Arrivals", href: "#new-arrivals", hasMegaMenu: true },
-  { name: "Best Sellers", href: "#best-sellers", hasMegaMenu: true },
-  { name: "Offers", href: "#offers", hasMegaMenu: true },
+  { name: "New Arrivals", href: "/new-arrivals", hasMegaMenu: true },
+  { name: "Best Sellers", href: "/best-sellers", hasMegaMenu: true },
+  { name: "Offers", href: "/offers", hasMegaMenu: true },
 ];
 
 export function Navbar() {

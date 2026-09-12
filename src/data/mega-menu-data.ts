@@ -35,10 +35,10 @@ export const MEGA_MENU_DATA: Record<string, MegaMenuContent> = {
         title: "DISCOVER",
         items: [
           { name: "All Footwear", href: "/shop" },
-          { name: "New Arrivals", href: "#new-arrivals", badge: "New" },
-          { name: "Best Sellers", href: "#best-sellers" },
+          { name: "New Arrivals", href: "/new-arrivals", badge: "New" },
+          { name: "Best Sellers", href: "/best-sellers" },
           { name: "Limited Drops", href: "/shop?filter=limited", badge: "250 Pairs" },
-          { name: "Archive & Offers", href: "#offers" },
+          { name: "Archive & Offers", href: "/offers" },
         ],
       },
       {
@@ -239,15 +239,15 @@ export const MEGA_MENU_DATA: Record<string, MegaMenuContent> = {
   "New Arrivals": {
     id: "new-arrivals",
     label: "New Arrivals",
-    href: "#new-arrivals",
+    href: "/new-arrivals",
     sections: [
       {
         title: "LATEST DROPS",
         items: [
-          { name: "Drop 03 // Autumn 2026", href: "#new-arrivals", badge: "Latest" },
-          { name: "V1 Phantom Low All-Black", href: "#new-arrivals" },
-          { name: "Atelier Derby Cognac Edition", href: "#new-arrivals" },
-          { name: "Echo Matrix Neon Accent", href: "#new-arrivals" },
+          { name: "Drop 03 // Autumn 2026", href: "/new-arrivals", badge: "Latest" },
+          { name: "V1 Phantom Low All-Black", href: "/new-arrivals" },
+          { name: "Atelier Derby Cognac Edition", href: "/new-arrivals" },
+          { name: "Echo Matrix Neon Accent", href: "/new-arrivals" },
         ],
       },
       {
@@ -263,7 +263,7 @@ export const MEGA_MENU_DATA: Record<string, MegaMenuContent> = {
         items: [
           { name: "The Carbon-Plate Experiment", href: "#story" },
           { name: "Behind Tuscan Tannery 07", href: "#story" },
-          { name: "All New Releases", href: "#new-arrivals" },
+          { name: "All New Releases", href: "/new-arrivals" },
         ],
       },
     ],
@@ -271,7 +271,7 @@ export const MEGA_MENU_DATA: Record<string, MegaMenuContent> = {
       title: "Drop 03 Capsule",
       subtitle: "Only 250 pairs produced per colorway. Certified numbered run.",
       imageUrl: "https://images.unsplash.com/photo-1539185441755-769473a23570?auto=format&fit=crop&w=800&q=80",
-      href: "#new-arrivals",
+      href: "/new-arrivals",
       ctaText: "Shop Drop 03",
     },
   },
@@ -279,15 +279,15 @@ export const MEGA_MENU_DATA: Record<string, MegaMenuContent> = {
   "Best Sellers": {
     id: "best-sellers",
     label: "Best Sellers",
-    href: "#best-sellers",
+    href: "/best-sellers",
     sections: [
       {
         title: "ICONIC SILHOUETTES",
         items: [
-          { name: "Apex Monolith Slip-On", href: "#best-sellers", badge: "#1 Seller" },
-          { name: "Echo Matrix Runner 02", href: "#best-sellers" },
-          { name: "Kinesis Track Low", href: "#best-sellers" },
-          { name: "Six&7 V1 Phantom Low", href: "#best-sellers" },
+          { name: "Apex Monolith Slip-On", href: "/best-sellers", badge: "#1 Seller" },
+          { name: "Echo Matrix Runner 02", href: "/best-sellers" },
+          { name: "Kinesis Track Low", href: "/best-sellers" },
+          { name: "Six&7 V1 Phantom Low", href: "/best-sellers" },
         ],
       },
       {
@@ -310,7 +310,7 @@ export const MEGA_MENU_DATA: Record<string, MegaMenuContent> = {
       title: "Apex Monolith Slip-On",
       subtitle: "Ergonomic seamless one-piece upper. The defining icon of the Six&7 house.",
       imageUrl: "https://images.unsplash.com/photo-1560769629-975ec94e6a86?auto=format&fit=crop&w=800&q=80",
-      href: "#best-sellers",
+      href: "/best-sellers",
       ctaText: "Shop The Icon",
     },
   },
@@ -318,30 +318,30 @@ export const MEGA_MENU_DATA: Record<string, MegaMenuContent> = {
   Offers: {
     id: "offers",
     label: "Offers",
-    href: "#offers",
+    href: "/offers",
     sections: [
       {
         title: "ARCHIVE & INCENTIVES",
         items: [
-          { name: "Seasonal Archive Sale", href: "#offers", badge: "Up to 30%" },
-          { name: "Last Chance Silhouettes", href: "#offers" },
-          { name: "Complimentary Global Shipping", href: "#offers" },
-          { name: "Private Allocation Members", href: "#offers", badge: "VIP" },
+          { name: "Seasonal Archive Sale", href: "/offers", badge: "Up to 30%" },
+          { name: "Last Chance Silhouettes", href: "/offers" },
+          { name: "Complimentary Global Shipping", href: "/offers" },
+          { name: "Private Allocation Members", href: "/offers", badge: "VIP" },
         ],
       },
       {
         title: "SPECIAL EDITIONS",
         items: [
-          { name: "Archive Men's Footwear", href: "#offers" },
-          { name: "Archive Women's Footwear", href: "#offers" },
-          { name: "Studio Overstock Lots", href: "#offers" },
+          { name: "Archive Men's Footwear", href: "/offers" },
+          { name: "Archive Women's Footwear", href: "/offers" },
+          { name: "Studio Overstock Lots", href: "/offers" },
         ],
       },
       {
         title: "MEMBERSHIP",
         items: [
-          { name: "Atelier Club Sign Up", href: "#offers" },
-          { name: "Early Access Calendar", href: "#offers" },
+          { name: "Atelier Club Sign Up", href: "/offers" },
+          { name: "Early Access Calendar", href: "/offers" },
         ],
       },
     ],
@@ -349,7 +349,7 @@ export const MEGA_MENU_DATA: Record<string, MegaMenuContent> = {
       title: "2026 Atelier Archive",
       subtitle: "Final remaining pairs of previous season silhouettes at curated archive pricing.",
       imageUrl: "https://images.unsplash.com/photo-1600185365926-3a2ce3cdb9eb?auto=format&fit=crop&w=800&q=80",
-      href: "#offers",
+      href: "/offers",
       ctaText: "Access Archive",
     },
   },
