@@ -90,9 +90,9 @@ export default async function AccountPage() {
           <section className="border border-neutral-200 p-8 bg-neutral-50">
             <h2 className="text-lg font-mono uppercase tracking-wider mb-4">Saved Addresses</h2>
             <p className="text-sm text-neutral-500 mb-4">Manage your shipping and billing addresses for a faster checkout.</p>
-            <button disabled className="text-xs uppercase tracking-widest underline underline-offset-4 text-neutral-400 cursor-not-allowed">
-              Manage Addresses (Coming Soon)
-            </button>
+            <Link href="/account/addresses" className="inline-block text-xs uppercase tracking-widest underline underline-offset-4 text-neutral-900 hover:text-neutral-600 transition-colors">
+              Manage Addresses
+            </Link>
           </section>
         </div>
       </div>
