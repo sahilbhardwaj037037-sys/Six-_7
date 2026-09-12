@@ -66,23 +66,28 @@ export function Footer() {
             </h4>
             <ul className="space-y-3 font-light text-neutral-400">
               <li>
+                <Link href="/track-order" className="hover:text-white transition-colors">
+                  Track Your Order
+                </Link>
+              </li>
+              <li>
+                <Link href="/shipping-and-returns" className="hover:text-white transition-colors">
+                  Shipping & Returns
+                </Link>
+              </li>
+              <li>
                 <Link href="/size-guide" className="hover:text-white transition-colors">
-                  Sizing & Fit Guide
-                </Link>
-              </li>
-              <li>
-                <Link href="/shipping-and-returns" className="hover:text-white transition-colors">
-                  Shipping & Tracking
-                </Link>
-              </li>
-              <li>
-                <Link href="/shipping-and-returns" className="hover:text-white transition-colors">
-                  Complimentary Returns
+                  Size & Fit Guide
                 </Link>
               </li>
               <li>
                 <Link href="/faq" className="hover:text-white transition-colors">
-                  Sole Restoration Program
+                  Frequently Asked Questions
+                </Link>
+              </li>
+              <li>
+                <Link href="/contact" className="hover:text-white transition-colors">
+                  Contact Concierge
                 </Link>
               </li>
             </ul>
@@ -106,7 +111,7 @@ export function Footer() {
               </li>
               <li>
                 <Link href="/faq" className="hover:text-white transition-colors">
-                  Frequently Asked Questions
+                  Sole Restoration Program
                 </Link>
               </li>
               <li>
