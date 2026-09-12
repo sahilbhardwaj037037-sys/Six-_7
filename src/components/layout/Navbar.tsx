@@ -162,8 +162,8 @@ export function Navbar() {
             <Heart className="w-5 h-5 stroke-[1.5]" />
           </Link>
 
-          <button
-            type="button"
+          <Link
+            href="/cart"
             className="relative p-2 text-neutral-900 hover:text-black transition-colors"
             aria-label="Shopping bag"
           >
@@ -171,7 +171,7 @@ export function Navbar() {
             <span className="absolute top-1 right-1 w-4 h-4 text-[10px] font-mono font-bold bg-[#111111] text-white rounded-full flex items-center justify-center">
               2
             </span>
-          </button>
+          </Link>
         </div>
       </nav>
 
