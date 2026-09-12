@@ -5,13 +5,15 @@ import Image from "next/image";
 import Link from "next/link";
 import { Heart } from "lucide-react";
 import { ShopProduct } from "@/data/mock-products";
+import { useWishlist } from "@/context/WishlistContext";
 
 interface ProductCardProps {
   product: ShopProduct;
 }
 
 export function ProductCard({ product }: ProductCardProps) {
-  const [isWishlisted, setIsWishlisted] = useState(false);
+  const { isInWishlist, toggleWishlist } = useWishlist();
+  const isWishlisted = isInWishlist(product.id);
 
   return (
     <div className="group flex flex-col">
@@ -39,10 +41,18 @@ export function ProductCard({ product }: ProductCardProps) {
           type="button"
           onClick={(e) => {
             e.preventDefault();
-            setIsWishlisted(!isWishlisted);
+            toggleWishlist({
+              productId: product.id,
+              slug: product.slug,
+              name: product.name,
+              imageUrl: product.imageUrl,
+              price: product.price,
+              originalPrice: product.originalPrice,
+              badge: product.badge,
+            });
           }}
           className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center text-neutral-800 hover:text-black hover:bg-white transition-all shadow-sm z-10"
-          aria-label={`Save ${product.name} to wishlist`}
+          aria-label={isWishlisted ? `Remove ${product.name} from wishlist` : `Save ${product.name} to wishlist`}
         >
           <Heart
             className={`w-4 h-4 transition-colors ${

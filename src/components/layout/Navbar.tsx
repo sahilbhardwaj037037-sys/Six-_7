@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { MEGA_MENU_DATA, MegaMenuContent } from "@/data/mega-menu-data";
 import { MegaMenu } from "./MegaMenu";
 import { useCart } from "@/context/CartContext";
+import { useWishlist } from "@/context/WishlistContext";
 
 const PRIMARY_LINKS = [
   { name: "Home", href: "/" },
@@ -22,6 +23,7 @@ const PRIMARY_LINKS = [
 
 export function Navbar() {
   const { totalItems, isHydrated } = useCart();
+  const { totalWishlistItems, isHydrated: isWishlistHydrated } = useWishlist();
   const [activeMenuKey, setActiveMenuKey] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileExpandedSection, setMobileExpandedSection] = useState<string | null>(null);
@@ -73,7 +75,8 @@ export function Navbar() {
     : null;
 
   return (
-    <header
+    <>
+      <header
       className="sticky top-0 z-50 bg-[#FBFBFB]/95 backdrop-blur-md border-b border-neutral-200/80 transition-all"
       onMouseLeave={handleMouseLeave}
     >
@@ -158,10 +161,15 @@ export function Navbar() {
 
           <Link
             href="/wishlist"
-            className="hidden sm:inline-flex p-2 text-neutral-700 hover:text-black transition-colors"
+            className="relative hidden sm:inline-flex p-2 text-neutral-700 hover:text-black transition-colors"
             aria-label="Saved items"
           >
             <Heart className="w-5 h-5 stroke-[1.5]" />
+            {isWishlistHydrated && totalWishlistItems > 0 && (
+              <span className="absolute top-1 right-1 min-w-4 h-4 px-1 text-[10px] font-mono font-bold bg-[#111111] text-white rounded-full flex items-center justify-center">
+                {totalWishlistItems > 99 ? "99+" : totalWishlistItems}
+              </span>
+            )}
           </Link>
 
           <Link
@@ -224,6 +232,8 @@ export function Navbar() {
           </motion.div>
         )}
       </AnimatePresence>
+
+    </header>
 
       {/* Mobile Accordion Drawer */}
       <AnimatePresence>
@@ -348,13 +358,13 @@ export function Navbar() {
                   onClick={() => setMobileMenuOpen(false)}
                   className="flex items-center gap-3 uppercase text-xs tracking-wider"
                 >
-                  <Heart className="w-4 h-4" /> Wishlist (0)
+                  <Heart className="w-4 h-4" /> Wishlist ({isWishlistHydrated ? totalWishlistItems : 0})
                 </Link>
               </div>
             </motion.div>
           </>
         )}
       </AnimatePresence>
-    </header>
+    </>
   );
 }

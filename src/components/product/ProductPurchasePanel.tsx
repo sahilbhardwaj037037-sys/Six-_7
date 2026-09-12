@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Heart, Check, Ruler } from "lucide-react";
 import { ShopProduct } from "@/data/mock-products";
 import { useCart } from "@/context/CartContext";
+import { useWishlist } from "@/context/WishlistContext";
 
 interface ProductPurchasePanelProps {
   product: ShopProduct;
@@ -22,10 +23,11 @@ const DEFAULT_SIZES = [
 
 export function ProductPurchasePanel({ product }: ProductPurchasePanelProps) {
   const { addItem } = useCart();
+  const { isInWishlist, toggleWishlist } = useWishlist();
   const [selectedColorIndex, setSelectedColorIndex] = useState(0);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [sizeError, setSizeError] = useState(false);
-  const [isWishlisted, setIsWishlisted] = useState(false);
+  const wishlisted = isInWishlist(product.id);
   const [isAdded, setIsAdded] = useState(false);
   const [showSizeGuide, setShowSizeGuide] = useState(false);
 
@@ -167,13 +169,23 @@ export function ProductPurchasePanel({ product }: ProductPurchasePanelProps) {
 
         <button
           type="button"
-          onClick={() => setIsWishlisted(!isWishlisted)}
-          aria-label="Add to Wishlist"
+          onClick={() =>
+            toggleWishlist({
+              productId: product.id,
+              slug: product.slug,
+              name: product.name,
+              imageUrl: product.imageUrl,
+              price: product.price,
+              originalPrice: product.originalPrice,
+              badge: product.badge,
+            })
+          }
+          aria-label={wishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
           className="w-14 h-14 border border-neutral-300 flex items-center justify-center hover:border-neutral-950 transition-colors bg-white shrink-0 cursor-pointer"
         >
           <Heart
             className={`w-5 h-5 transition-colors ${
-              isWishlisted ? "fill-neutral-950 text-neutral-950" : "text-neutral-700"
+              wishlisted ? "fill-neutral-950 text-neutral-950" : "text-neutral-700"
             }`}
           />
         </button>
