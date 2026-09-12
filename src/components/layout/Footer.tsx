@@ -66,22 +66,22 @@ export function Footer() {
             </h4>
             <ul className="space-y-3 font-light text-neutral-400">
               <li>
-                <Link href="#care" className="hover:text-white transition-colors">
+                <Link href="/size-guide" className="hover:text-white transition-colors">
                   Sizing & Fit Guide
                 </Link>
               </li>
               <li>
-                <Link href="#orders" className="hover:text-white transition-colors">
+                <Link href="/faq" className="hover:text-white transition-colors">
                   Shipping & Tracking
                 </Link>
               </li>
               <li>
-                <Link href="#returns" className="hover:text-white transition-colors">
+                <Link href="/faq" className="hover:text-white transition-colors">
                   Complimentary Returns
                 </Link>
               </li>
               <li>
-                <Link href="#restoration" className="hover:text-white transition-colors">
+                <Link href="/faq" className="hover:text-white transition-colors">
                   Sole Restoration Program
                 </Link>
               </li>
@@ -95,22 +95,22 @@ export function Footer() {
             </h4>
             <ul className="space-y-3 font-light text-neutral-400">
               <li>
-                <Link href="#story" className="hover:text-white transition-colors">
+                <Link href="/about" className="hover:text-white transition-colors">
                   Design Philosophy
                 </Link>
               </li>
               <li>
-                <Link href="#sustainability" className="hover:text-white transition-colors">
+                <Link href="/about" className="hover:text-white transition-colors">
                   Material Transparency
                 </Link>
               </li>
               <li>
-                <Link href="#press" className="hover:text-white transition-colors">
-                  Editorial Archive
+                <Link href="/faq" className="hover:text-white transition-colors">
+                  Frequently Asked Questions
                 </Link>
               </li>
               <li>
-                <Link href="#contact" className="hover:text-white transition-colors">
+                <Link href="/contact" className="hover:text-white transition-colors">
                   Studio Inquiries
                 </Link>
               </li>
@@ -127,10 +127,10 @@ export function Footer() {
           <div className="flex items-center gap-6">
             <span className="text-neutral-400">CURRENCY: USD ($)</span>
             <span className="text-neutral-600">|</span>
-            <Link href="#privacy" className="hover:text-white transition-colors">
+            <Link href="/contact" className="hover:text-white transition-colors">
               PRIVACY POLICY
             </Link>
-            <Link href="#terms" className="hover:text-white transition-colors">
+            <Link href="/contact" className="hover:text-white transition-colors">
               TERMS OF SERVICE
             </Link>
           </div>
