@@ -21,7 +21,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
   // Generate gallery images (simulating multiple angles with unsplash placeholders if needed)
   const galleryImages = [
     product.imageUrl,
-    product.secondaryImageUrl || "https://images.unsplash.com/photo-1552346154-21d32810baa3?auto=format&fit=crop&w=800&q=80",
+    product.secondaryImageUrl || "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=800&q=80",
     "https://images.unsplash.com/photo-1511556532299-8f662fc26c06?auto=format&fit=crop&w=800&q=80"
   ];
 
