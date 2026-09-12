@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Heart, Check, Ruler } from "lucide-react";
 import { ShopProduct } from "@/data/mock-products";
+import { useCart } from "@/context/CartContext";
 
 interface ProductPurchasePanelProps {
   product: ShopProduct;
@@ -20,6 +21,7 @@ const DEFAULT_SIZES = [
 ];
 
 export function ProductPurchasePanel({ product }: ProductPurchasePanelProps) {
+  const { addItem } = useCart();
   const [selectedColorIndex, setSelectedColorIndex] = useState(0);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [sizeError, setSizeError] = useState(false);
@@ -33,6 +35,17 @@ export function ProductPurchasePanel({ product }: ProductPurchasePanelProps) {
       return;
     }
     setSizeError(false);
+    addItem({
+      productId: product.id,
+      slug: product.slug,
+      name: product.name,
+      imageUrl: product.imageUrl,
+      price: product.price,
+      size: selectedSize,
+      colorIndex: selectedColorIndex,
+      colorHex: product.colorways?.[selectedColorIndex],
+      quantity: 1,
+    });
     setIsAdded(true);
     setTimeout(() => {
       setIsAdded(false);

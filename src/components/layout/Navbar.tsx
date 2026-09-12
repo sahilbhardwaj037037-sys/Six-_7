@@ -6,6 +6,7 @@ import { Search, ShoppingBag, User, Heart, Menu, X, ChevronDown } from "lucide-r
 import { motion, AnimatePresence } from "framer-motion";
 import { MEGA_MENU_DATA, MegaMenuContent } from "@/data/mega-menu-data";
 import { MegaMenu } from "./MegaMenu";
+import { useCart } from "@/context/CartContext";
 
 const PRIMARY_LINKS = [
   { name: "Home", href: "/" },
@@ -20,6 +21,7 @@ const PRIMARY_LINKS = [
 ];
 
 export function Navbar() {
+  const { totalItems, isHydrated } = useCart();
   const [activeMenuKey, setActiveMenuKey] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileExpandedSection, setMobileExpandedSection] = useState<string | null>(null);
@@ -168,9 +170,11 @@ export function Navbar() {
             aria-label="Shopping bag"
           >
             <ShoppingBag className="w-5 h-5 stroke-[1.5]" />
-            <span className="absolute top-1 right-1 w-4 h-4 text-[10px] font-mono font-bold bg-[#111111] text-white rounded-full flex items-center justify-center">
-              2
-            </span>
+            {isHydrated && totalItems > 0 && (
+              <span className="absolute top-1 right-1 min-w-4 h-4 px-1 text-[10px] font-mono font-bold bg-[#111111] text-white rounded-full flex items-center justify-center">
+                {totalItems > 99 ? "99+" : totalItems}
+              </span>
+            )}
           </Link>
         </div>
       </nav>
