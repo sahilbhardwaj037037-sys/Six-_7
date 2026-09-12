@@ -71,12 +71,12 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/faq" className="hover:text-white transition-colors">
+                <Link href="/shipping-and-returns" className="hover:text-white transition-colors">
                   Shipping & Tracking
                 </Link>
               </li>
               <li>
-                <Link href="/faq" className="hover:text-white transition-colors">
+                <Link href="/shipping-and-returns" className="hover:text-white transition-colors">
                   Complimentary Returns
                 </Link>
               </li>
@@ -127,10 +127,10 @@ export function Footer() {
           <div className="flex items-center gap-6">
             <span className="text-neutral-400">CURRENCY: USD ($)</span>
             <span className="text-neutral-600">|</span>
-            <Link href="/contact" className="hover:text-white transition-colors">
+            <Link href="/privacy-policy" className="hover:text-white transition-colors">
               PRIVACY POLICY
             </Link>
-            <Link href="/contact" className="hover:text-white transition-colors">
+            <Link href="/terms-and-conditions" className="hover:text-white transition-colors">
               TERMS OF SERVICE
             </Link>
           </div>

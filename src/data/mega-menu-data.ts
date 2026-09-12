@@ -261,8 +261,8 @@ export const MEGA_MENU_DATA: Record<string, MegaMenuContent> = {
       {
         title: "CURATED STORIES",
         items: [
-          { name: "The Carbon-Plate Experiment", href: "#story" },
-          { name: "Behind Tuscan Tannery 07", href: "#story" },
+          { name: "The Carbon-Plate Experiment", href: "/about" },
+          { name: "Behind Tuscan Tannery 07", href: "/about" },
           { name: "All New Releases", href: "/new-arrivals" },
         ],
       },
@@ -301,8 +301,8 @@ export const MEGA_MENU_DATA: Record<string, MegaMenuContent> = {
       {
         title: "REVIEWS & AWARDS",
         items: [
-          { name: "Editorial Reviews", href: "#story" },
-          { name: "Design Award 2026 Nominee", href: "#story" },
+          { name: "Editorial Reviews", href: "/about" },
+          { name: "Design Award 2026 Nominee", href: "/about" },
         ],
       },
     ],
