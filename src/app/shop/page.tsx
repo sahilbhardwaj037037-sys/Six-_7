@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { ShopClient } from "@/components/shop/ShopClient";
+import { getProducts } from "@/lib/services/catalog";
 
 export const metadata = {
   title: "All Footwear // Six&7 Atelier",
@@ -9,7 +10,8 @@ export const metadata = {
     "Explore the permanent catalog of Six&7 footwear. Architectural sneakers, bio-composite runners, and handcrafted Italian leather silhouettes.",
 };
 
-export default function ShopPage() {
+export default async function ShopPage() {
+  const products = await getProducts();
   return (
     <div className="flex flex-col min-h-screen bg-[#FBFBFB]">
       <Navbar />
@@ -24,7 +26,7 @@ export default function ShopPage() {
             </div>
           }
         >
-          <ShopClient />
+          <ShopClient initialProducts={products} />
         </Suspense>
       </main>
 

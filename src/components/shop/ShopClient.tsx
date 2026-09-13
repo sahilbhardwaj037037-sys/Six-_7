@@ -4,14 +4,14 @@ import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { SlidersHorizontal } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { SHOP_PRODUCTS, ShopProduct, Gender, ProductCategory, SportType } from "@/data/mock-products";
+import { ShopProduct, Gender, ProductCategory, SportType } from "@/data/mock-products";
 import { ShopHeader } from "./ShopHeader";
 import { ProductCard } from "./ProductCard";
 import { ProductFilters, FilterState } from "./ProductFilters";
 import { ProductSort, SortOption } from "./ProductSort";
 import { EmptyProductsState } from "./EmptyProductsState";
 
-export function ShopClient() {
+export function ShopClient({ initialProducts }: { initialProducts: ShopProduct[] }) {
   const searchParams = useSearchParams();
 
   const [filters, setFilters] = useState<FilterState>({
@@ -54,7 +54,7 @@ export function ShopClient() {
 
   // Filter & Sort Logic
   const filteredProducts = useMemo(() => {
-    let result: ShopProduct[] = [...SHOP_PRODUCTS];
+    let result: ShopProduct[] = [...initialProducts];
 
     // Gender Filter
     if (filters.gender !== "all") {
@@ -95,7 +95,7 @@ export function ShopClient() {
     }
 
     return result;
-  }, [filters, sortOption]);
+  }, [filters, sortOption, initialProducts]);
 
   const activeGenderLabel = filters.gender !== "all" ? filters.gender.toUpperCase() : undefined;
   const activeCategoryLabel = filters.category !== "all" ? filters.category.toUpperCase() : undefined;

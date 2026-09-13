@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { SHOP_PRODUCTS } from "@/data/mock-products";
+import { getProductBySlug, getProducts } from "@/lib/services/catalog";
 import { ProductGallery } from "@/components/product/ProductGallery";
 import { ProductPurchasePanel } from "@/components/product/ProductPurchasePanel";
 import { ProductCard } from "@/components/shop/ProductCard";
@@ -12,7 +12,7 @@ interface ProductPageProps {
 export default async function ProductPage({ params }: ProductPageProps) {
   // In Next.js 15+, params is a Promise
   const resolvedParams = await params;
-  const product = SHOP_PRODUCTS.find((p) => p.slug === resolvedParams.slug);
+  const product = await getProductBySlug(resolvedParams.slug);
 
   if (!product) {
     notFound();
@@ -26,7 +26,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
   ];
 
   // Find up to 4 related products (matching category or gender, excluding current)
-  const relatedProducts = SHOP_PRODUCTS.filter
+  const relatedProducts = (await getProducts()).filter
     ((p) => (p.categorySlug === product.categorySlug || p.gender === product.gender) && p.id !== product.id)
     .slice(0, 4);
 
