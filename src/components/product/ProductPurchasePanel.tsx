@@ -11,14 +11,9 @@ interface ProductPurchasePanelProps {
 }
 
 const DEFAULT_SIZES = [
-  { eu: "EU 39", us: "US 6.5", available: true },
-  { eu: "EU 40", us: "US 7.5", available: true },
-  { eu: "EU 41", us: "US 8", available: true },
-  { eu: "EU 42", us: "US 8.5", available: true },
-  { eu: "EU 43", us: "US 9.5", available: true },
-  { eu: "EU 44", us: "US 10.5", available: true },
-  { eu: "EU 45", us: "US 11.5", available: true },
-  { eu: "EU 46", us: "US 12", available: false },
+  { eu: "EU 42", us: "US 9", canonicalSize: "9", available: true },
+  { eu: "EU 43", us: "US 10", canonicalSize: "10", available: true },
+  { eu: "EU 44", us: "US 11", canonicalSize: "11", available: true },
 ];
 
 export function ProductPurchasePanel({ product }: ProductPurchasePanelProps) {
@@ -118,16 +113,16 @@ export function ProductPurchasePanel({ product }: ProductPurchasePanelProps) {
 
         <div className="grid grid-cols-4 gap-2">
           {DEFAULT_SIZES.map((size) => {
-            const isSelected = selectedSize === size.eu;
+            const isSelected = selectedSize === size.canonicalSize;
             const isAvailable = size.available;
 
             return (
               <button
-                key={size.eu}
+                key={size.canonicalSize}
                 type="button"
                 disabled={!isAvailable}
                 onClick={() => {
-                  setSelectedSize(size.eu);
+                  setSelectedSize(size.canonicalSize);
                   if (sizeError) setSizeError(false);
                 }}
                 className={`py-3 text-center border text-xs font-mono uppercase transition-all ${

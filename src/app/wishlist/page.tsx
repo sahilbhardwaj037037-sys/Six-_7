@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Heart, Trash2, ArrowRight, ShoppingBag, ArrowLeft } from "lucide-react";
@@ -7,23 +8,41 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { useWishlist } from "@/context/WishlistContext";
 import { useCart } from "@/context/CartContext";
+import { SHOP_PRODUCTS } from "@/data/mock-products";
 
 export default function WishlistPage() {
   const { items, removeFromWishlist, clearWishlist, totalWishlistItems, isHydrated } = useWishlist();
   const { addItem } = useCart();
+  const [movingId, setMovingId] = useState<string | null>(null);
 
-  const handleMoveToCart = (item: (typeof items)[number]) => {
-    addItem({
-      productId: item.productId,
-      slug: item.slug,
-      name: item.name,
-      imageUrl: item.imageUrl,
-      price: item.price,
-      size: "US 10", // Standard fallback size for one-click move
-      colorIndex: 0,
-      quantity: 1,
-    });
-    removeFromWishlist(item.productId);
+  const handleMoveToCart = async (item: (typeof items)[number]) => {
+    if (movingId) return;
+    setMovingId(item.productId);
+
+    try {
+      const product = SHOP_PRODUCTS.find(
+        (p) => p.id === item.productId || p.slug === item.slug
+      );
+      const defaultColorHex = product?.colorways?.[0];
+
+      const result = await addItem({
+        productId: item.productId,
+        slug: item.slug,
+        name: item.name,
+        imageUrl: item.imageUrl,
+        price: item.price,
+        size: "10", // Canonical DB size for one-click move
+        colorIndex: 0,
+        colorHex: defaultColorHex,
+        quantity: 1,
+      });
+
+      if (result.success) {
+        removeFromWishlist(item.productId);
+      }
+    } finally {
+      setMovingId(null);
+    }
   };
 
   if (!isHydrated) {
@@ -154,11 +173,12 @@ export default function WishlistPage() {
                   <div className="space-y-2 pt-2 border-t border-neutral-100">
                     <button
                       type="button"
+                      disabled={movingId === item.productId}
                       onClick={() => handleMoveToCart(item)}
-                      className="w-full py-2.5 px-3 bg-neutral-950 text-white hover:bg-neutral-800 text-[11px] font-mono tracking-wider uppercase flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                      className="w-full py-2.5 px-3 bg-neutral-950 text-white hover:bg-neutral-800 disabled:opacity-50 text-[11px] font-mono tracking-wider uppercase flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                     >
                       <ShoppingBag className="w-3.5 h-3.5" />
-                      <span>Move to Bag</span>
+                      <span>{movingId === item.productId ? "Moving..." : "Move to Bag"}</span>
                     </button>
                     <Link
                       href={`/product/${item.slug}`}
