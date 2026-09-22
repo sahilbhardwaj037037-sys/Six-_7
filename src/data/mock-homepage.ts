@@ -1,5 +1,6 @@
 export interface Product {
   id: string;
+  slug: string;
   name: string;
   category: string;
   price: number;
@@ -62,6 +63,7 @@ export const FEATURED_COLLECTIONS: Collection[] = [
 export const NEW_ARRIVALS: Product[] = [
   {
     id: "prod-1",
+    slug: "v1-phantom-low-noir",
     name: "Six&7 V1 Phantom Low",
     category: "Sculpted Low-Top",
     price: 320,
@@ -71,6 +73,7 @@ export const NEW_ARRIVALS: Product[] = [
   },
   {
     id: "prod-2",
+    slug: "aeroform-kinetic-high",
     name: "Aeroform Kinetic High",
     category: "Architectural Court",
     price: 380,
@@ -80,6 +83,7 @@ export const NEW_ARRIVALS: Product[] = [
   },
   {
     id: "prod-3",
+    slug: "strata-minimalist-runner",
     name: "Strata Minimalist Runner",
     category: "Bio-Foam Athletic",
     price: 260,
@@ -88,6 +92,7 @@ export const NEW_ARRIVALS: Product[] = [
   },
   {
     id: "prod-4",
+    slug: "nadir-leather-derby",
     name: "Nadir Leather Derby Sneaker",
     category: "Smart Footwear",
     price: 410,
@@ -100,6 +105,7 @@ export const NEW_ARRIVALS: Product[] = [
 export const BEST_SELLERS: Product[] = [
   {
     id: "prod-5",
+    slug: "apex-monolith-slip-on",
     name: "Apex Monolith Slip-On",
     category: "Seamless Ergonomic",
     price: 290,
@@ -109,6 +115,7 @@ export const BEST_SELLERS: Product[] = [
   },
   {
     id: "prod-6",
+    slug: "echo-matrix-runner-02",
     name: "Echo Matrix Runner 02",
     category: "Performance Cushion",
     price: 340,
@@ -119,6 +126,7 @@ export const BEST_SELLERS: Product[] = [
   },
   {
     id: "prod-7",
+    slug: "forma-off-grid-mule",
     name: "Forma Off-Grid Mule",
     category: "Hybrid Casual",
     price: 230,
@@ -127,6 +135,7 @@ export const BEST_SELLERS: Product[] = [
   },
   {
     id: "prod-8",
+    slug: "kinesis-track-low",
     name: "Kinesis Track Low",
     category: "Track & Field Lifestyle",
     price: 275,

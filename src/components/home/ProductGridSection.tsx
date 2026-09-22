@@ -51,29 +51,36 @@ export function ProductGridSection({
           <div key={product.id} className="group flex flex-col">
             {/* Image Box */}
             <div className="relative aspect-[4/5] w-full bg-[#F3F3F3] overflow-hidden">
-              <Image
-                src={product.imageUrl}
-                alt={product.name}
-                fill
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                className="object-cover object-center group-hover:scale-105 transition-transform duration-500 ease-out"
-              />
+              <Link
+                href={`/product/${product.slug}`}
+                className="relative block w-full h-full"
+                tabIndex={-1}
+                aria-hidden="true"
+              >
+                <Image
+                  src={product.imageUrl}
+                  alt={product.name}
+                  fill
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                  className="object-cover object-center group-hover:scale-105 transition-transform duration-500 ease-out"
+                />
+              </Link>
 
               {/* Badge */}
               {product.badge && (
-                <span className="absolute top-3 left-3 text-[10px] font-mono tracking-widest uppercase bg-white/95 text-neutral-900 px-2 py-0.5 border border-neutral-200">
+                <span className="absolute top-3 left-3 text-[10px] font-mono tracking-widest uppercase bg-white/95 text-neutral-900 px-2 py-0.5 border border-neutral-200 pointer-events-none z-10">
                   {product.badge}
                 </span>
               )}
 
-              {/* Quick Add Action Affordance */}
-              <button
-                type="button"
-                className="absolute bottom-3 right-3 w-9 h-9 bg-white text-neutral-900 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 group-hover:translate-y-0 translate-y-2 transition-all duration-300 shadow-md hover:bg-neutral-900 hover:text-white"
-                aria-label={`Add ${product.name} to cart`}
+              {/* View / Options Action Affordance */}
+              <Link
+                href={`/product/${product.slug}`}
+                className="absolute bottom-3 right-3 w-9 h-9 bg-white text-neutral-900 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 group-hover:translate-y-0 translate-y-2 transition-all duration-300 shadow-md hover:bg-neutral-900 hover:text-white z-10"
+                aria-label={`View ${product.name}`}
               >
                 <Plus className="w-4 h-4" />
-              </button>
+              </Link>
             </div>
 
             {/* Info */}
@@ -95,9 +102,11 @@ export function ProductGridSection({
                   </div>
                 </div>
 
-                <h3 className="text-sm font-medium text-neutral-900 mt-1 uppercase tracking-tight group-hover:text-neutral-600 transition-colors">
-                  {product.name}
-                </h3>
+                <Link href={`/product/${product.slug}`}>
+                  <h3 className="text-sm font-medium text-neutral-900 mt-1 uppercase tracking-tight group-hover:text-neutral-600 transition-colors">
+                    {product.name}
+                  </h3>
+                </Link>
               </div>
 
               {/* Price Row */}
