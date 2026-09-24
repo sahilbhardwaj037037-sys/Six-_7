@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { getSearchSuggestions } from "@/lib/actions/search";
 import { Search, ShoppingBag, User, Heart, Menu, X, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MEGA_MENU_DATA, MegaMenuContent } from "@/data/mega-menu-data";
@@ -30,6 +32,34 @@ export function Navbar() {
   const [mobileExpandedSection, setMobileExpandedSection] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [suggestions, setSuggestions] = useState<Array<{id: string; slug: string; name: string; imageUrl?: string}>>([]);
+
+  // Debounce user input
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedQuery(searchQuery);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
+
+  // Fetch suggestions when debounced query changes
+  useEffect(() => {
+    async function fetchSuggestions() {
+      const trimmed = debouncedQuery.trim();
+      if (trimmed.length < 2) {
+        setSuggestions([]);
+        return;
+      }
+      try {
+        const results = await getSearchSuggestions(trimmed);
+        setSuggestions(results);
+      } catch (e) {
+        setSuggestions([]);
+      }
+    }
+    fetchSuggestions();
+  }, [debouncedQuery]);
   const router = useRouter();
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -223,9 +253,9 @@ export function Navbar() {
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="overflow-hidden bg-white border-b border-neutral-200"
+            className={`bg-white border-b border-neutral-200 ${suggestions.length > 0 ? "overflow-visible" : "overflow-hidden"}`}
           >
-            <form onSubmit={handleSearchSubmit} className="max-w-4xl mx-auto px-4 py-4 flex items-center gap-3">
+            <form onSubmit={handleSearchSubmit} className="max-w-4xl mx-auto px-4 py-4 flex items-center gap-3 relative">
               <Search className="w-5 h-5 text-neutral-400 stroke-[1.5]" />
               <input
                 type="text"
@@ -242,7 +272,31 @@ export function Navbar() {
               >
                 Close
               </button>
-            </form>
+
+            {suggestions.length > 0 && (
+              <div className="absolute top-full left-0 w-full bg-white border-x border-b border-neutral-200 shadow-xl z-50 flex flex-col">
+                {suggestions.map((product) => (
+                  <Link
+                    key={product.id}
+                    href={`/product/${product.slug}`}
+                    onClick={() => {
+                      setSearchOpen(false);
+                      setSearchQuery("");
+                      setSuggestions([]);
+                    }}
+                    className="flex items-center gap-4 px-6 py-3 hover:bg-neutral-50 transition-colors border-b border-neutral-100 last:border-0"
+                  >
+                    {product.imageUrl && (
+                      <div className="relative w-10 h-10 bg-neutral-100 flex-shrink-0">
+                        <Image src={product.imageUrl} alt={product.name} fill sizes="40px" className="object-cover" />
+                      </div>
+                    )}
+                    <span className="text-sm font-medium text-neutral-900 truncate">{product.name}</span>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </form>
           </motion.div>
         )}
       </AnimatePresence>
