@@ -4,7 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { ProductCard } from "@/components/shop/ProductCard";
-import { SHOP_PRODUCTS } from "@/data/mock-products";
+import { getProducts } from "@/lib/services/catalog";
 
 export const metadata: Metadata = {
   title: "Best Sellers // Six&7 Atelier",
@@ -12,8 +12,8 @@ export const metadata: Metadata = {
     "The definitive Six&7 icons. Proven performance, architectural silhouettes, and enduring design.",
 };
 
-export default function BestSellersPage() {
-  const bestSellers = SHOP_PRODUCTS.filter((product) => product.isBestSeller);
+export default async function BestSellersPage() {
+  const bestSellers = await getProducts({ isBestSeller: true });
 
   return (
     <div className="flex flex-col min-h-screen bg-[#FBFBFB]">

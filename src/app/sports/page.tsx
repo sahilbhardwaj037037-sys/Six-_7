@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { CategoryLandingView, CategoryLandingConfig } from "@/components/category/CategoryLandingView";
-import { SHOP_PRODUCTS } from "@/data/mock-products";
+import { getProducts } from "@/lib/services/catalog";
 
 export const metadata: Metadata = {
   title: "Sports & Performance // Six&7 Atelier",
@@ -34,8 +34,10 @@ const SPORTS_CONFIG: CategoryLandingConfig = {
   ],
 };
 
-export default function SportsPage() {
-  const sportsProducts = SHOP_PRODUCTS.filter((product) => product.sport !== "lifestyle");
+export default async function SportsPage() {
+  const sportsProducts = await getProducts({
+    sport: { not: "LIFESTYLE" },
+  });
 
   return (
     <div className="flex flex-col min-h-screen">

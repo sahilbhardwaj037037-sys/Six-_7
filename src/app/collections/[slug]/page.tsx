@@ -7,7 +7,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { ProductCard } from "@/components/shop/ProductCard";
 import { FEATURED_COLLECTIONS } from "@/data/mock-homepage";
-import { SHOP_PRODUCTS, ShopProduct } from "@/data/mock-products";
+import { getProducts } from "@/lib/services/catalog";
 
 interface CollectionPageProps {
   params: Promise<{ slug: string }>;
@@ -32,10 +32,12 @@ function getCollectionBySlug(slug: string) {
   return ADDITIONAL_COLLECTIONS[slug] || null;
 }
 
-function getCollectionProducts(slug: string): ShopProduct[] {
-  let matched: ShopProduct[] = [];
+type CatalogProduct = Awaited<ReturnType<typeof getProducts>>[number];
+
+function getCollectionProducts(slug: string, allProducts: CatalogProduct[]): CatalogProduct[] {
+  let matched: CatalogProduct[] = [];
   if (slug === "vanguard-trail") {
-    matched = SHOP_PRODUCTS.filter(
+    matched = allProducts.filter(
       (p) =>
         p.categorySlug === "trail" ||
         p.sport === "trail" ||
@@ -43,7 +45,7 @@ function getCollectionProducts(slug: string): ShopProduct[] {
         p.sport === "training"
     );
   } else if (slug === "atelier-monochrome") {
-    matched = SHOP_PRODUCTS.filter(
+    matched = allProducts.filter(
       (p) =>
         p.slug.includes("atelier") ||
         p.slug.includes("phantom") ||
@@ -52,20 +54,20 @@ function getCollectionProducts(slug: string): ShopProduct[] {
         p.categorySlug === "derby"
     );
   } else if (slug === "studio-runners") {
-    matched = SHOP_PRODUCTS.filter(
+    matched = allProducts.filter(
       (p) =>
         p.categorySlug === "running" ||
         p.sport === "running" ||
         p.sport === "training"
     );
   } else if (slug === "bio-foam") {
-    matched = SHOP_PRODUCTS.filter(
+    matched = allProducts.filter(
       (p) =>
         p.categorySlug === "running" ||
         p.category.toLowerCase().includes("bio-foam")
     );
   }
-  return matched.length > 0 ? matched : SHOP_PRODUCTS;
+  return matched.length > 0 ? matched : allProducts;
 }
 
 export async function generateMetadata({
@@ -105,7 +107,8 @@ export default async function CollectionDetailPage({
     notFound();
   }
 
-  const products = getCollectionProducts(slug);
+  const allProducts = await getProducts();
+  const products = getCollectionProducts(slug, allProducts);
 
   return (
     <div className="flex flex-col min-h-screen bg-[#FBFBFB]">

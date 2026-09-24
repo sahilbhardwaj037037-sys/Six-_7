@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { CategoryLandingView, CategoryLandingConfig } from "@/components/category/CategoryLandingView";
-import { SHOP_PRODUCTS } from "@/data/mock-products";
+import { getProducts } from "@/lib/services/catalog";
 
 export const metadata: Metadata = {
   title: "Women's Collection // Six&7 Atelier",
@@ -34,10 +34,10 @@ const WOMEN_CONFIG: CategoryLandingConfig = {
   ],
 };
 
-export default function WomenPage() {
-  const womenProducts = SHOP_PRODUCTS.filter(
-    (product) => product.gender === "women" || product.gender === "unisex"
-  );
+export default async function WomenPage() {
+  const womenProducts = await getProducts({
+    gender: { in: ["WOMEN", "UNISEX"] },
+  });
 
   return (
     <div className="flex flex-col min-h-screen">

@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { CategoryLandingView, CategoryLandingConfig } from "@/components/category/CategoryLandingView";
-import { SHOP_PRODUCTS } from "@/data/mock-products";
+import { getProducts } from "@/lib/services/catalog";
 
 export const metadata: Metadata = {
   title: "Junior Collection // Six&7 Atelier",
@@ -33,8 +33,10 @@ const KIDS_CONFIG: CategoryLandingConfig = {
   ],
 };
 
-export default function KidsPage() {
-  const kidsProducts = SHOP_PRODUCTS.filter((product) => product.gender === "kids");
+export default async function KidsPage() {
+  const kidsProducts = await getProducts({
+    gender: "KIDS",
+  });
 
   return (
     <div className="flex flex-col min-h-screen">

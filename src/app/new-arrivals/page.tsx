@@ -4,7 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { ProductCard } from "@/components/shop/ProductCard";
-import { SHOP_PRODUCTS } from "@/data/mock-products";
+import { getProducts } from "@/lib/services/catalog";
 
 export const metadata: Metadata = {
   title: "New Arrivals // Six&7 Atelier",
@@ -12,8 +12,8 @@ export const metadata: Metadata = {
     "Explore the latest drop of architectural silhouettes, advanced cushioning, and experimental forms.",
 };
 
-export default function NewArrivalsPage() {
-  const newArrivals = SHOP_PRODUCTS.filter((product) => product.isNewArrival);
+export default async function NewArrivalsPage() {
+  const newArrivals = await getProducts({ isNewArrival: true });
 
   return (
     <div className="flex flex-col min-h-screen bg-[#FBFBFB]">

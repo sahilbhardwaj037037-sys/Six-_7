@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Search, ShoppingBag, User, Heart, Menu, X, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MEGA_MENU_DATA, MegaMenuContent } from "@/data/mega-menu-data";
@@ -28,6 +29,17 @@ export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileExpandedSection, setMobileExpandedSection] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const router = useRouter();
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = searchQuery.trim();
+    if (!trimmed) return;
+    router.push(`/search?q=${encodeURIComponent(trimmed)}`);
+    setSearchOpen(false);
+    setSearchQuery("");
+  };
 
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -213,13 +225,15 @@ export function Navbar() {
             transition={{ duration: 0.2 }}
             className="overflow-hidden bg-white border-b border-neutral-200"
           >
-            <div className="max-w-4xl mx-auto px-4 py-4 flex items-center gap-3">
+            <form onSubmit={handleSearchSubmit} className="max-w-4xl mx-auto px-4 py-4 flex items-center gap-3">
               <Search className="w-5 h-5 text-neutral-400 stroke-[1.5]" />
               <input
                 type="text"
                 placeholder="Search models, colorways, collections (e.g. Phantom Low, Bio-Foam)..."
                 className="w-full text-sm font-sans bg-transparent focus:outline-none placeholder:text-neutral-400 text-neutral-900"
                 autoFocus
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
               />
               <button
                 type="button"
@@ -228,7 +242,7 @@ export function Navbar() {
               >
                 Close
               </button>
-            </div>
+            </form>
           </motion.div>
         )}
       </AnimatePresence>
