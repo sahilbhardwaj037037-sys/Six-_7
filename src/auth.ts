@@ -3,14 +3,10 @@ import Credentials from "next-auth/providers/credentials";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
+import { authConfig } from "./auth.config";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  session: {
-    strategy: "jwt",
-  },
-  pages: {
-    signIn: "/login",
-  },
+  ...authConfig,
   providers: [
     Credentials({
       name: "Credentials",
@@ -25,43 +21,22 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         if (parsedCredentials.success) {
           const { email, password } = parsedCredentials.data;
+          const user = await prisma.user.findUnique({ where: { email } });
 
-          const user = await prisma.user.findUnique({
-            where: { email },
-          });
-
-          // If no user is found, or if they signed up with OAuth and don't have a password
-          if (!user || !user.password) {
-            return null;
-          }
+          if (!user || !user.password) return null;
 
           const passwordsMatch = await bcrypt.compare(password, user.password);
-
           if (passwordsMatch) {
             return {
               id: user.id,
               name: user.name,
               email: user.email,
+              role: user.role,
             };
           }
         }
-
         return null;
       },
     }),
   ],
-  callbacks: {
-    async session({ session, token }) {
-      if (token.sub && session.user) {
-        session.user.id = token.sub;
-      }
-      return session;
-    },
-    async jwt({ token, user }) {
-      if (user) {
-        token.sub = user.id;
-      }
-      return token;
-    },
-  },
 });
