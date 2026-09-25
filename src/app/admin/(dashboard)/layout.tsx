@@ -23,6 +23,9 @@ export default async function AdminDashboardLayout({
           <Link href="/admin/brands" className="block px-3 py-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-sm text-sm font-medium transition-colors">
             Brands
           </Link>
+          <Link href="/admin/categories" className="block px-3 py-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-sm text-sm font-medium transition-colors">
+            Categories
+          </Link>
           <div className="block px-3 py-2 text-gray-600 rounded-sm text-sm font-medium cursor-not-allowed">
             Catalog (Soon)
           </div>
