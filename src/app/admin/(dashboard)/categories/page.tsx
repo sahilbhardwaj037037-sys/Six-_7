@@ -1,5 +1,6 @@
 import { requireAdmin } from "@/lib/admin-auth";
 import { getCategories } from "@/lib/services/admin-catalog";
+import Link from "next/link";
 
 export default async function AdminCategoriesPage() {
   await requireAdmin();
@@ -9,6 +10,12 @@ export default async function AdminCategoriesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Categories</h1>
+        <Link
+          href="/admin/categories/new"
+          className="bg-black text-white px-4 py-2 rounded-sm text-sm font-medium hover:bg-gray-800 transition-colors"
+        >
+          Create Category
+        </Link>
       </div>
 
       <div className="bg-white border border-gray-200 rounded-sm shadow-sm overflow-hidden">
