@@ -11,3 +11,15 @@ export async function getBrands() {
     },
   });
 }
+
+/**
+ * Fetches all categories for the Admin catalog interface.
+ * Ordered alphabetically by name.
+ */
+export async function getCategories() {
+  return prisma.category.findMany({
+    orderBy: {
+      name: "asc",
+    },
+  });
+}
