@@ -17,8 +17,11 @@ export default async function AdminDashboardLayout({
           <h1 className="text-xl font-bold tracking-tight">Six&7 Workspace</h1>
         </div>
         <nav className="flex-1 p-4 space-y-1">
-          <Link href="/admin" className="block px-3 py-2 bg-gray-800 rounded-sm text-sm font-medium text-white transition-colors">
+          <Link href="/admin" className="block px-3 py-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-sm text-sm font-medium transition-colors">
             Dashboard
+          </Link>
+          <Link href="/admin/brands" className="block px-3 py-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-sm text-sm font-medium transition-colors">
+            Brands
           </Link>
           <div className="block px-3 py-2 text-gray-600 rounded-sm text-sm font-medium cursor-not-allowed">
             Catalog (Soon)
