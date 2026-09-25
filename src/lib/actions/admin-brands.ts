@@ -1,55 +1,38 @@
 "use server";
 
-import { requireAdmin } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
+import { requireAdmin } from "@/lib/admin-auth";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-const createBrandSchema = z.object({
-  name: z.string().min(1, "Name is required").trim(),
+const brandSchema = z.object({
+  name: z.string().min(1, "Brand name is required").trim(),
   slug: z
     .string()
     .min(1, "Slug is required")
-    .regex(
-      /^[a-z0-9-]+$/,
-      "Slug must contain only lowercase letters, numbers, and hyphens"
-    )
+    .regex(/^[a-z0-9-]+$/, "Slug must contain only lowercase letters, numbers, and hyphens")
     .trim(),
   description: z.string().trim().optional(),
 });
 
-export async function createBrand(
-  input: z.infer<typeof createBrandSchema>
-) {
-  // 1. Authorize (Throws if not Admin)
+type BrandInput = z.infer<typeof brandSchema>;
+
+export async function createBrand(data: BrandInput) {
   await requireAdmin();
 
-  // 2. Validate Input
-  const parsed = createBrandSchema.safeParse(input);
-
+  const parsed = brandSchema.safeParse(data);
   if (!parsed.success) {
-    return {
-      success: false,
-      error: parsed.error.issues[0].message,
-    };
+    return { success: false, error: parsed.error.issues[0].message };
   }
 
-  // 3. Mutate Database
   try {
     await prisma.brand.create({
-      data: {
-        name: parsed.data.name,
-        slug: parsed.data.slug,
-        description: parsed.data.description || null,
-      },
+      data: parsed.data,
     });
 
-    // 4. Revalidate & Return Success
     revalidatePath("/admin/brands");
     return { success: true };
-
   } catch (error: any) {
-    // 5. Handle Unique Constraint Errors
     if (error?.code === "P2002") {
       return {
         success: false,
@@ -57,10 +40,46 @@ export async function createBrand(
       };
     }
 
-    // Fallback Error
     return {
       success: false,
       error: "Failed to create brand. Please try again."
+    };
+  }
+}
+
+export async function updateBrand(id: string, data: BrandInput) {
+  await requireAdmin();
+
+  const parsed = brandSchema.safeParse(data);
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0].message };
+  }
+
+  try {
+    await prisma.brand.update({
+      where: { id },
+      data: parsed.data,
+    });
+
+    revalidatePath("/admin/brands");
+    return { success: true };
+  } catch (error: any) {
+    if (error?.code === "P2002") {
+      return {
+        success: false,
+        error: "Another brand with this name or slug already exists."
+      };
+    }
+    if (error?.code === "P2025") {
+      return {
+        success: false,
+        error: "Brand not found. It may have been deleted."
+      };
+    }
+
+    return {
+      success: false,
+      error: "Failed to update brand. Please try again."
     };
   }
 }

@@ -32,6 +32,7 @@ export default async function AdminBrandsPage() {
                   <th className="px-6 py-4 font-medium">Slug</th>
                   <th className="px-6 py-4 font-medium">Description</th>
                   <th className="px-6 py-4 font-medium">Created Date</th>
+                  <th className="px-6 py-4 font-medium text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -44,6 +45,14 @@ export default async function AdminBrandsPage() {
                     </td>
                     <td className="px-6 py-4 text-gray-500">
                       {new Date(brand.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <Link
+                        href={`/admin/brands/${brand.id}/edit`}
+                        className="text-blue-600 hover:text-blue-800 font-medium transition-colors"
+                      >
+                        Edit
+                      </Link>
                     </td>
                   </tr>
                 ))}
