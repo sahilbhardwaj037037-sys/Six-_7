@@ -46,3 +46,44 @@ export async function createCategory(data: CategoryInput) {
     };
   }
 }
+
+export async function updateCategory(id: string, data: CategoryInput) {
+  await requireAdmin();
+
+  const parsed = categorySchema.safeParse(data);
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0].message };
+  }
+
+  try {
+    await prisma.category.update({
+      where: { id },
+      data: {
+        name: parsed.data.name,
+        slug: parsed.data.slug,
+        description: parsed.data.description,
+      },
+    });
+
+    revalidatePath("/admin/categories");
+    return { success: true };
+  } catch (error: any) {
+    if (error?.code === "P2002") {
+      return {
+        success: false,
+        error: "A category with this name or slug already exists."
+      };
+    }
+    if (error?.code === "P2025") {
+      return {
+        success: false,
+        error: "Category not found."
+      };
+    }
+
+    return {
+      success: false,
+      error: "Failed to update category. Please try again."
+    };
+  }
+}
