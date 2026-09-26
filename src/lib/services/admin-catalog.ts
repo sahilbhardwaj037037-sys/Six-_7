@@ -86,3 +86,21 @@ export async function getAdminProductVariants(productId: string) {
     orderBy: { createdAt: 'asc' },
   });
 }
+
+export async function getAllAdminInventory() {
+  return await prisma.productVariant.findMany({
+    include: {
+      product: {
+        select: {
+          name: true,
+          isArchived: true,
+        },
+      },
+      inventory: true,
+    },
+    orderBy: [
+      { product: { name: 'asc' } },
+      { sku: 'asc' },
+    ],
+  });
+}
