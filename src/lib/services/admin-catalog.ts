@@ -63,3 +63,26 @@ export async function getAdminProductById(id: string) {
     },
   });
 }
+
+export async function getAdminProductVariants(productId: string) {
+  return await prisma.productVariant.findMany({
+    where: { productId },
+    select: {
+      id: true,
+      sku: true,
+      size: true,
+      color: true,
+      colorHex: true,
+      price: true,
+      createdAt: true,
+      inventory: {
+        select: {
+          id: true,
+          quantity: true,
+          reserved: true,
+        }
+      }
+    },
+    orderBy: { createdAt: 'asc' },
+  });
+}
