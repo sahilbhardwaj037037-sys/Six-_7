@@ -143,3 +143,75 @@ export async function updateProduct(id: string, data: UpdateProductInput) {
     };
   }
 }
+
+const createVariantSchema = z.object({
+  sku: z.string().min(1, "SKU is required").trim(),
+  size: z.string().min(1, "Size is required").trim(),
+  color: z.string().min(1, "Color is required").trim(),
+  colorHex: z.string().trim().optional(),
+  price: z.coerce.number().positive("Price must be a positive number").optional(),
+  quantity: z.coerce.number().int().nonnegative("Quantity must be 0 or greater").default(0),
+});
+
+export async function createProductVariant(productId: string, formData: FormData) {
+  try {
+    await requireAdmin();
+
+    const rawPrice = formData.get("price");
+    const rawColorHex = formData.get("colorHex");
+    
+    const rawData = {
+      sku: formData.get("sku"),
+      size: formData.get("size"),
+      color: formData.get("color"),
+      colorHex: rawColorHex && rawColorHex.toString().trim() !== "" ? rawColorHex : undefined,
+      price: rawPrice && rawPrice.toString().trim() !== "" ? rawPrice : undefined,
+      quantity: formData.get("quantity") || 0,
+    };
+
+    const validated = createVariantSchema.parse(rawData);
+
+    const variant = await prisma.productVariant.create({
+      data: {
+        productId,
+        sku: validated.sku,
+        size: validated.size,
+        color: validated.color,
+        colorHex: validated.colorHex,
+        price: validated.price,
+        inventory: {
+          create: {
+            quantity: validated.quantity,
+            reserved: 0
+          }
+        }
+      }
+    });
+
+    revalidatePath(`/admin/products/${productId}/variants`);
+    revalidatePath(`/admin/products/${productId}/edit`);
+    
+    return { success: true, variantId: variant.id };
+  } catch (error: any) {
+    console.error("[Create Product Variant Error]:", error);
+
+    if (error.code === "P2002") {
+      const target = error.meta?.target;
+      if (Array.isArray(target)) {
+        if (target.includes("sku")) {
+          return { error: "A variant with this SKU already exists." };
+        }
+        if (target.includes("productId") && target.includes("size") && target.includes("color")) {
+          return { error: "This Size and Color combination already exists for this product." };
+        }
+      }
+      return { error: "A unique constraint violation occurred (SKU or Size/Color already exists)." };
+    }
+
+    if (error instanceof z.ZodError) {
+      return { error: error.issues[0].message };
+    }
+
+    return { error: "Failed to create product variant. Please try again." };
+  }
+}

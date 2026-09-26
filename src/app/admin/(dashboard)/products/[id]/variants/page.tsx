@@ -38,9 +38,15 @@ export default async function AdminProductVariantsPage({
           </Link>
           <Link
             href="/admin/products"
-            className="text-sm font-medium text-white bg-black hover:bg-gray-800 px-4 py-2 rounded-sm shadow-sm transition-colors"
+            className="text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 border border-gray-300 px-4 py-2 rounded-sm shadow-sm transition-colors"
           >
             All Products
+          </Link>
+          <Link
+            href={`/admin/products/${id}/variants/new`}
+            className="text-sm font-medium text-white bg-black hover:bg-gray-800 px-4 py-2 rounded-sm shadow-sm transition-colors"
+          >
+            Add Variant
           </Link>
         </div>
       </div>
