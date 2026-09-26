@@ -74,10 +74,20 @@ export async function createProduct(data: ProductInput) {
   }
 }
 
-export async function updateProduct(id: string, data: ProductInput) {
+// Extend the schema specifically for updates to include the status & merchandising flags
+const updateProductSchema = productSchema.extend({
+  isArchived: z.boolean(),
+  isNewArrival: z.boolean(),
+  isBestSeller: z.boolean(),
+  featured: z.boolean(),
+});
+
+type UpdateProductInput = z.infer<typeof updateProductSchema>;
+
+export async function updateProduct(id: string, data: UpdateProductInput) {
   await requireAdmin();
 
-  const parsed = productSchema.safeParse(data);
+  const parsed = updateProductSchema.safeParse(data);
   if (!parsed.success) {
     return { success: false, error: parsed.error.issues[0].message };
   }
@@ -95,8 +105,10 @@ export async function updateProduct(id: string, data: ProductInput) {
         sport: parsed.data.sport,
         brandId: parsed.data.brandId,
         categoryId: parsed.data.categoryId,
-        // isArchived, merchandising flags, variants, and media are strictly excluded
-        // to automatically preserve their existing state in the database.
+        isArchived: parsed.data.isArchived,
+        isNewArrival: parsed.data.isNewArrival,
+        isBestSeller: parsed.data.isBestSeller,
+        featured: parsed.data.featured,
       },
     });
 
