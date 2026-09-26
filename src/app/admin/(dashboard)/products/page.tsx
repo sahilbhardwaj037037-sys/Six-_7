@@ -1,5 +1,6 @@
 import { requireAdmin } from "@/lib/admin-auth";
 import { getAdminProducts } from "@/lib/services/admin-catalog";
+import Link from "next/link";
 
 export default async function AdminProductsPage() {
   await requireAdmin();
@@ -27,6 +28,7 @@ export default async function AdminProductsPage() {
                   <th className="px-6 py-4 font-medium">Category</th>
                   <th className="px-6 py-4 font-medium">Base Price</th>
                   <th className="px-6 py-4 font-medium">Status</th>
+                  <th className="px-6 py-4 font-medium text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -49,6 +51,14 @@ export default async function AdminProductsPage() {
                           Active
                         </span>
                       )}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <Link
+                        href={`/admin/products/${product.id}/edit`}
+                        className="text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
+                      >
+                        Edit
+                      </Link>
                     </td>
                   </tr>
                 ))}

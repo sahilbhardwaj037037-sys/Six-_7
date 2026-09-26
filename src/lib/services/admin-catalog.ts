@@ -45,3 +45,21 @@ export async function getAdminProducts() {
     },
   });
 }
+
+/**
+ * Fetches a single product by ID for the Admin edit interface.
+ * Does NOT filter by isArchived, allowing drafted products to be edited.
+ */
+export async function getAdminProductById(id: string) {
+  return prisma.product.findUnique({
+    where: { id },
+    include: {
+      brand: {
+        select: { id: true, name: true },
+      },
+      category: {
+        select: { id: true, name: true },
+      },
+    },
+  });
+}

@@ -73,3 +73,61 @@ export async function createProduct(data: ProductInput) {
     };
   }
 }
+
+export async function updateProduct(id: string, data: ProductInput) {
+  await requireAdmin();
+
+  const parsed = productSchema.safeParse(data);
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0].message };
+  }
+
+  try {
+    await prisma.product.update({
+      where: { id },
+      data: {
+        name: parsed.data.name,
+        slug: parsed.data.slug,
+        description: parsed.data.description,
+        basePrice: parsed.data.basePrice,
+        originalPrice: parsed.data.originalPrice,
+        gender: parsed.data.gender,
+        sport: parsed.data.sport,
+        brandId: parsed.data.brandId,
+        categoryId: parsed.data.categoryId,
+        // isArchived, merchandising flags, variants, and media are strictly excluded
+        // to automatically preserve their existing state in the database.
+      },
+    });
+
+    // Revalidate admin and global layout to ensure customer catalog updates
+    revalidatePath("/admin/products");
+    revalidatePath("/", "layout"); 
+    
+    return { success: true };
+  } catch (error: any) {
+    if (error?.code === "P2002") {
+      return {
+        success: false,
+        error: "A product with this slug already exists.",
+      };
+    }
+    if (error?.code === "P2003") {
+      return {
+        success: false,
+        error: "Invalid Brand or Category reference.",
+      };
+    }
+    if (error?.code === "P2025") {
+      return {
+        success: false,
+        error: "Product not found.",
+      };
+    }
+
+    return {
+      success: false,
+      error: "Failed to update product. Please try again.",
+    };
+  }
+}
