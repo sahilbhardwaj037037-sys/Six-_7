@@ -1,20 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Heart, Check, Ruler } from "lucide-react";
 import { ShopProduct } from "@/data/mock-products";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 
 interface ProductPurchasePanelProps {
-  product: ShopProduct;
+  product: ShopProduct & {
+    availableSizes?: { size: string; available: boolean; colorHex: string | null }[];
+  };
 }
-
-const DEFAULT_SIZES = [
-  { eu: "EU 42", us: "US 9", canonicalSize: "9", available: true },
-  { eu: "EU 43", us: "US 10", canonicalSize: "10", available: true },
-  { eu: "EU 44", us: "US 11", canonicalSize: "11", available: true },
-];
 
 export function ProductPurchasePanel({ product }: ProductPurchasePanelProps) {
   const { addItem } = useCart();
@@ -49,6 +45,16 @@ export function ProductPurchasePanel({ product }: ProductPurchasePanelProps) {
     }, 2200);
   };
 
+  // Dynamically filter actual DB sizes based on the selected colorway
+  const currentSizes = useMemo(() => {
+    if (!product.availableSizes) return [];
+    const selectedColorHex = product.colorways?.[selectedColorIndex];
+    
+    return product.availableSizes.filter(s => 
+      !selectedColorHex || s.colorHex === selectedColorHex
+    );
+  }, [product.availableSizes, product.colorways, selectedColorIndex]);
+
   return (
     <div className="flex flex-col space-y-7">
       {/* Colorway Selection */}
@@ -65,7 +71,11 @@ export function ProductPurchasePanel({ product }: ProductPurchasePanelProps) {
                 <button
                   key={idx}
                   type="button"
-                  onClick={() => setSelectedColorIndex(idx)}
+                  onClick={() => {
+                    setSelectedColorIndex(idx);
+                    setSelectedSize(null); // Reset size error/selection on color change
+                    setSizeError(false);
+                  }}
                   aria-label={`Select color option ${idx + 1}`}
                   className={`w-7 h-7 rounded-full transition-all relative flex items-center justify-center ${
                     isSelected ? "ring-2 ring-neutral-950 ring-offset-2 scale-105" : "hover:opacity-80 border border-neutral-300"
@@ -112,32 +122,37 @@ export function ProductPurchasePanel({ product }: ProductPurchasePanelProps) {
         )}
 
         <div className="grid grid-cols-4 gap-2">
-          {DEFAULT_SIZES.map((size) => {
-            const isSelected = selectedSize === size.canonicalSize;
-            const isAvailable = size.available;
+          {currentSizes.length > 0 ? (
+            currentSizes.map((sizeObj) => {
+              const isSelected = selectedSize === sizeObj.size;
+              const isAvailable = sizeObj.available;
 
-            return (
-              <button
-                key={size.canonicalSize}
-                type="button"
-                disabled={!isAvailable}
-                onClick={() => {
-                  setSelectedSize(size.canonicalSize);
-                  if (sizeError) setSizeError(false);
-                }}
-                className={`py-3 text-center border text-xs font-mono uppercase transition-all ${
-                  !isAvailable
-                    ? "border-neutral-200 bg-neutral-100 text-neutral-400 cursor-not-allowed line-through"
-                    : isSelected
-                    ? "border-neutral-950 bg-neutral-950 text-white font-medium shadow-sm"
-                    : "border-neutral-200 bg-white text-neutral-900 hover:border-neutral-400"
-                }`}
-              >
-                <div>{size.eu}</div>
-                <div className="text-[10px] opacity-70 mt-0.5">{size.us}</div>
-              </button>
-            );
-          })}
+              return (
+                <button
+                  key={sizeObj.size}
+                  type="button"
+                  disabled={!isAvailable}
+                  onClick={() => {
+                    setSelectedSize(sizeObj.size);
+                    if (sizeError) setSizeError(false);
+                  }}
+                  className={`py-3 text-center border text-xs font-mono uppercase transition-all ${
+                    !isAvailable
+                      ? "border-neutral-200 bg-neutral-100 text-neutral-400 cursor-not-allowed line-through"
+                      : isSelected
+                      ? "border-neutral-950 bg-neutral-950 text-white font-medium shadow-sm"
+                      : "border-neutral-200 bg-white text-neutral-900 hover:border-neutral-400"
+                  }`}
+                >
+                  <div className="text-sm font-medium">{sizeObj.size}</div>
+                </button>
+              );
+            })
+          ) : (
+            <div className="col-span-4 py-4 text-center text-xs text-neutral-500 font-mono border border-dashed border-neutral-200">
+              No sizes available for this option.
+            </div>
+          )}
         </div>
       </div>
 

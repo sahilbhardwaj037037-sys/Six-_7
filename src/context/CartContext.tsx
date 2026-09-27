@@ -23,6 +23,7 @@ export interface CartItem {
   colorIndex: number;
   colorHex?: string;
   quantity: number;
+  isArchived?: boolean;
 }
 
 export interface AddItemInput {
@@ -301,6 +302,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
                       price: canonicalItem.price,
                       imageUrl: canonicalItem.imageUrl || item.imageUrl,
                       name: canonicalItem.name || item.name,
+                      isArchived: canonicalItem.isArchived,
                     };
                   }
                   return item;
@@ -433,12 +435,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   };
 
   const totalItems = useMemo(
-    () => items.reduce((acc, item) => acc + item.quantity, 0),
+    () => items.reduce((acc, item) => acc + (item.isArchived ? 0 : item.quantity), 0),
     [items]
   );
 
   const subtotal = useMemo(
-    () => items.reduce((acc, item) => acc + item.price * item.quantity, 0),
+    () => items.reduce((acc, item) => acc + (item.isArchived ? 0 : item.price * item.quantity), 0),
     [items]
   );
 

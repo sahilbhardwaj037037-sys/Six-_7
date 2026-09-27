@@ -75,7 +75,7 @@ export default function CartPage() {
             <div className="lg:col-span-8 space-y-6">
               <div className="border-t border-neutral-200 divide-y divide-neutral-200">
                 {items.map((item) => (
-                  <div key={item.id} className="py-6 sm:py-8 flex flex-col sm:flex-row gap-5 sm:gap-6">
+                  <div key={item.id} className={`py-6 sm:py-8 flex flex-col sm:flex-row gap-5 sm:gap-6 ${item.isArchived ? 'opacity-60' : ''}`}>
                     {/* Item Thumbnail */}
                     <Link
                       href={`/product/${item.slug}`}
@@ -114,21 +114,29 @@ export default function CartPage() {
                               <span className="text-neutral-900 font-medium">Option {item.colorIndex + 1}</span>
                             </span>
                           </div>
+                          {item.isArchived && (
+                            <div className="mt-3">
+                              <span className="inline-flex items-center px-2 py-1 rounded bg-neutral-200 text-neutral-700 text-[10px] font-mono uppercase tracking-wider font-medium">
+                                Unavailable
+                              </span>
+                            </div>
+                          )}
                         </div>
 
                         {/* Line Item Total */}
-                        <div className="text-sm font-mono font-medium text-neutral-950">
+                        <div className={`text-sm font-mono font-medium ${item.isArchived ? 'text-neutral-400 line-through' : 'text-neutral-950'}`}>
                           ${(item.price * item.quantity).toFixed(2)}
                         </div>
                       </div>
 
                       {/* Quantity Stepper & Removal */}
                       <div className="mt-6 flex items-center justify-between pt-4 border-t border-neutral-100">
-                        <div className="flex items-center border border-neutral-200 bg-white">
+                        <div className={`flex items-center border border-neutral-200 ${item.isArchived ? 'bg-neutral-50' : 'bg-white'}`}>
                           <button
                             type="button"
+                            disabled={item.isArchived}
                             onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                            className="p-2 text-neutral-600 hover:text-neutral-950 transition-colors disabled:opacity-30 cursor-pointer"
+                            className="p-2 text-neutral-600 hover:text-neutral-950 transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                             aria-label={`Decrease quantity of ${item.name}`}
                           >
                             <Minus className="w-3.5 h-3.5" />
@@ -138,8 +146,9 @@ export default function CartPage() {
                           </span>
                           <button
                             type="button"
+                            disabled={item.isArchived}
                             onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                            className="p-2 text-neutral-600 hover:text-neutral-950 transition-colors cursor-pointer"
+                            className="p-2 text-neutral-600 hover:text-neutral-950 transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                             aria-label={`Increase quantity of ${item.name}`}
                           >
                             <Plus className="w-3.5 h-3.5" />

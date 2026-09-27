@@ -17,25 +17,34 @@ type ProductWithRelations = Prisma.ProductGetPayload<{
 
 /**
  * Adapter: Transforms PostgreSQL relational data into the existing UI ShopProduct shape.
- * Real DB variants/sizes are evaluated for stock and colors here, but kept in DB 
- * for future DB-backed Cart & Checkout phases.
+ * Real DB variants/sizes are evaluated for stock and colors here.
  */
-export function mapProductToShopProduct(product: ProductWithRelations): ShopProduct {
+export function mapProductToShopProduct(product: ProductWithRelations): ShopProduct & { availableSizes?: { size: string; available: boolean; colorHex: string | null }[] } {
   // Safe media fallback
   const mainMedia = product.media.find(m => m.isMain) || product.media[0];
   const secondaryMedia = product.media.filter(m => !m.isMain).sort((a, b) => a.order - b.order)[0];
 
-  // Map variants to unique colorways
-  const uniqueColorHexes = Array.from(
-  new Set(
-    product.variants
-      .map(v => v.colorHex)
-      .filter((hex): hex is string => hex !== null && hex !== undefined)
-  )
-);
+  // Filter out archived variants for customer-facing consideration
+  const activeVariants = product.variants.filter(v => !v.isArchived);
 
-  // Resolve inventory availability across all variants
-  const inStock = product.variants.some(v => v.inventory && v.inventory.quantity > 0);
+  // Map active variants to unique colorways
+  const uniqueColorHexes = Array.from(
+    new Set(
+      activeVariants
+        .map(v => v.colorHex)
+        .filter((hex): hex is string => hex !== null && hex !== undefined)
+    )
+  );
+
+  // Resolve inventory availability strictly across active variants
+  const inStock = activeVariants.some(v => v.inventory && v.inventory.quantity > 0);
+
+  // Expose the real size inventory for the UI panel
+  const availableSizes = activeVariants.map(v => ({
+    size: v.size,
+    colorHex: v.colorHex,
+    available: v.inventory ? (v.inventory.quantity - v.inventory.reserved) > 0 : false
+  }));
 
   return {
     id: product.id,
@@ -56,11 +65,13 @@ export function mapProductToShopProduct(product: ProductWithRelations): ShopProd
     isBestSeller: product.isBestSeller,
     featured: product.featured,
     createdAt: product.createdAt.toISOString(),
+    availableSizes,
   };
 }
 
 /**
  * Fetches all active products, optionally filtered by Prisma WhereInput.
+ * Excludes archived variants from the variant relation payload.
  */
 export async function getProducts(where?: Prisma.ProductWhereInput): Promise<ShopProduct[]> {
   const products = await prisma.product.findMany({
@@ -74,6 +85,7 @@ export async function getProducts(where?: Prisma.ProductWhereInput): Promise<Sho
         orderBy: { order: 'asc' }
       },
       variants: {
+        where: { isArchived: false },
         include: { inventory: true },
       },
     },
@@ -87,6 +99,7 @@ export async function getProducts(where?: Prisma.ProductWhereInput): Promise<Sho
 
 /**
  * Fetches a single active product by its unique slug.
+ * Excludes archived variants from the variant relation payload.
  */
 export async function getProductBySlug(slug: string): Promise<ShopProduct | null> {
   const product = await prisma.product.findFirst({
@@ -100,6 +113,7 @@ export async function getProductBySlug(slug: string): Promise<ShopProduct | null
         orderBy: { order: 'asc' }
       },
       variants: {
+        where: { isArchived: false },
         include: { inventory: true },
       },
     },

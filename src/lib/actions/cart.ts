@@ -46,9 +46,8 @@ export type AddCartItemInput = z.infer<typeof addCartItemSchema>;
 export type GuestCartItemInput = z.infer<typeof guestCartItemSchema>;
 
 /**
- * Resolves a single ProductVariant from the database unambiguously.
- * Prioritizes productId + size + exact/case-insensitive colorHex or color name.
- * Never guesses from colorIndex. If multiple or zero variants match, returns null.
+ * Resolves a single active ProductVariant from the database unambiguously.
+ * Rejects archived variants.
  */
 async function resolveProductVariant(
   productId: string,
@@ -56,7 +55,7 @@ async function resolveProductVariant(
   colorHex?: string,
   color?: string
 ) {
-  const conditions: Array<Record<string, unknown>> = [{ productId }, { size }];
+  const conditions: Array<Record<string, unknown>> = [{ productId }, { size }, { isArchived: false }];
 
   if (colorHex) {
     conditions.push({
@@ -86,7 +85,6 @@ async function resolveProductVariant(
     },
   });
 
-  // Strict check: Must resolve to exactly one active variant unambiguously
   if (matchingVariants.length === 1) {
     return matchingVariants[0];
   }
@@ -103,11 +101,6 @@ export async function getUserCart() {
       where: { userId },
       include: {
         items: {
-          where: {
-            variant: {
-              product: { isArchived: false },
-            },
-          },
           include: {
             variant: {
               include: {
@@ -130,12 +123,11 @@ export async function getUserCart() {
       return { success: true, items: [] };
     }
 
-    // Format DB records to match CartItem expected by CartContext
+    // Format DB records and include isArchived flag for Option B handling
     const items = cart.items.map((item) => {
       const v = item.variant;
       const p = v.product;
 
-      // Authoritative media resolution (variant media first, then product media)
       const mainMedia =
         v.media.find((m) => m.isMain) ||
         v.media[0] ||
@@ -145,7 +137,7 @@ export async function getUserCart() {
       const price = v.price ? Number(v.price) : Number(p.basePrice);
 
       return {
-        id: v.id, // Primary identifier in UI for DB-backed items
+        id: v.id,
         variantId: v.id,
         productId: p.id,
         slug: p.slug,
@@ -156,6 +148,7 @@ export async function getUserCart() {
         colorIndex: 0,
         colorHex: v.colorHex || undefined,
         quantity: item.quantity,
+        isArchived: v.isArchived || p.isArchived,
       };
     });
 
@@ -173,7 +166,6 @@ export async function addCartItem(input: AddCartItemInput) {
 
     const validated = addCartItemSchema.parse(input);
 
-    // Resolve variant strictly from DB without trusting client price/media
     const variant = await resolveProductVariant(
       validated.productId,
       validated.size,
@@ -181,7 +173,7 @@ export async function addCartItem(input: AddCartItemInput) {
       validated.color
     );
 
-    if (!variant || variant.product.isArchived) {
+    if (!variant || variant.product.isArchived || variant.isArchived) {
       return { error: "Selected product variant is unavailable." };
     }
 
@@ -277,8 +269,8 @@ export async function updateCartItemQuantity(variantId: string, quantity: number
       include: { inventory: true, product: { select: { isArchived: true } } },
     });
 
-    if (!variant || variant.product.isArchived) {
-      return { error: "Product variant is unavailable." };
+    if (!variant || variant.product.isArchived || variant.isArchived) {
+      return { error: "This product variant is no longer available." };
     }
 
     const availableStock = Math.max(
@@ -374,13 +366,12 @@ export async function syncGuestCart(guestItems: GuestCartItemInput[]) {
       return { success: true, syncedCount: 0, skippedCount: 0, issues: [] };
     }
 
-    // 1. PRE-TRANSACTION BATCH LOOKUP
-    // Fetch all active variants for all requested productIds in a single query outside the transaction
     const distinctProductIds = Array.from(new Set(validated.items.map((i) => i.productId)));
 
     const candidateVariants = await prisma.productVariant.findMany({
       where: {
         productId: { in: distinctProductIds },
+        isArchived: false,
         product: { isArchived: false },
       },
       include: {
@@ -395,7 +386,6 @@ export async function syncGuestCart(guestItems: GuestCartItemInput[]) {
       },
     });
 
-    // 2. IN-MEMORY VARIANT RESOLUTION & VALIDATION (Outside transaction)
     type ResolvedSyncItem = {
       variantId: string;
       requestedQuantity: number;
@@ -425,7 +415,6 @@ export async function syncGuestCart(guestItems: GuestCartItemInput[]) {
         return true;
       });
 
-      // Must match exactly one active variant unambiguously
       if (matchingVariants.length !== 1) {
         skippedCount++;
         issues.push(`Product ${item.productId} (${item.size}) could not be resolved or is unavailable.`);
@@ -456,7 +445,6 @@ export async function syncGuestCart(guestItems: GuestCartItemInput[]) {
       return { success: true, syncedCount: 0, skippedCount, issues };
     }
 
-    // 3. LEAN, ATOMIC TRANSACTION (Writes only; strictly using `tx`)
     let syncedCount = 0;
 
     await prisma.$transaction(async (tx) => {
