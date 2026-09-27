@@ -118,14 +118,22 @@ export default async function AdminProductVariantsPage({
                       {variant.inventory?.reserved ?? 0}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
-                      <div className="flex items-center justify-end gap-4">
+                      <div className="flex items-center justify-end gap-3">
                         <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${variant.isArchived ? 'bg-gray-100 text-gray-600 ring-gray-500/10' : 'bg-green-50 text-green-700 ring-green-600/20'}`}>
                           {variant.isArchived ? 'Archived' : 'Active'}
                         </span>
+                        
+                        <Link 
+                          href={`/admin/products/${id}/variants/${variant.id}/edit`}
+                          className="text-indigo-600 hover:text-indigo-900 font-medium ml-2"
+                        >
+                          Edit
+                        </Link>
+
                         <form action={toggleVariant}>
                           <input type="hidden" name="variantId" value={variant.id} />
                           <input type="hidden" name="isArchived" value={String(variant.isArchived)} />
-                          <button type="submit" className="text-blue-600 hover:text-blue-900 font-medium">
+                          <button type="submit" className="text-gray-600 hover:text-gray-900 font-medium ml-2">
                             {variant.isArchived ? 'Restore' : 'Archive'}
                           </button>
                         </form>

@@ -244,3 +244,79 @@ export async function updateVariantArchiveStatus(variantId: string, isArchived: 
     return { success: false, error: error.message || "Failed to update variant archive status" };
   }
 }
+
+const updateVariantSchema = z.object({
+  sku: z.string().min(1, "SKU is required").trim(),
+  size: z.string().min(1, "Size is required").trim(),
+  color: z.string().min(1, "Color is required").trim(),
+  colorHex: z.string().trim().optional(),
+  price: z.coerce.number().positive("Price must be a positive number").optional(),
+});
+
+export async function updateProductVariant(productId: string, variantId: string, formData: FormData) {
+  try {
+    await requireAdmin();
+
+    const existingVariant = await prisma.productVariant.findUnique({
+      where: { id: variantId }
+    });
+
+    if (!existingVariant) {
+      return { error: "Variant not found." };
+    }
+
+    if (existingVariant.productId !== productId) {
+      return { error: "Variant does not belong to this product." };
+    }
+
+    const rawPrice = formData.get("price");
+    const rawColorHex = formData.get("colorHex");
+    
+    const rawData = {
+      sku: formData.get("sku"),
+      size: formData.get("size"),
+      color: formData.get("color"),
+      colorHex: rawColorHex && rawColorHex.toString().trim() !== "" ? rawColorHex : undefined,
+      price: rawPrice && rawPrice.toString().trim() !== "" ? rawPrice : undefined,
+    };
+
+    const validated = updateVariantSchema.parse(rawData);
+
+    await prisma.productVariant.update({
+      where: { id: variantId },
+      data: {
+        sku: validated.sku,
+        size: validated.size,
+        color: validated.color,
+        colorHex: validated.colorHex ?? null,
+        price: validated.price ?? null,
+      }
+    });
+
+    revalidatePath(`/admin/products/${productId}/variants`);
+    revalidatePath(`/admin/products/${productId}/edit`);
+    
+    return { success: true };
+  } catch (error: any) {
+    console.error("[Update Product Variant Error]:", error);
+
+    if (error.code === "P2002") {
+      const target = error.meta?.target;
+      if (Array.isArray(target)) {
+        if (target.includes("sku")) {
+          return { error: "A variant with this SKU already exists." };
+        }
+        if (target.includes("productId") && target.includes("size") && target.includes("color")) {
+          return { error: "This Size and Color combination already exists for this product." };
+        }
+      }
+      return { error: "A unique constraint violation occurred (SKU or Size/Color already exists)." };
+    }
+
+    if (error instanceof z.ZodError) {
+      return { error: error.issues[0].message };
+    }
+
+    return { error: "Failed to update product variant. Please try again." };
+  }
+}
