@@ -1,5 +1,6 @@
 import { requireAdmin } from "@/lib/admin-auth";
 import { getAllAdminInventory } from "@/lib/services/admin-catalog";
+import { AdjustStockModal } from "./AdjustStockModal";
 
 export const dynamic = "force-dynamic";
 
@@ -32,12 +33,13 @@ export default async function AdminInventoryPage() {
                 <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
                 <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Reserved</th>
                 <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Available</th>
+                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {variants.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-sm text-gray-500">
+                  <td colSpan={8} className="px-6 py-12 text-center text-sm text-gray-500">
                     No inventory records found.
                   </td>
                 </tr>
@@ -100,6 +102,17 @@ export default async function AdminInventoryPage() {
                         <span className={available > 0 ? "text-green-600" : "text-red-600"}>
                           {available}
                         </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <AdjustStockModal
+                          variantId={variant.id}
+                          productName={variant.product.name}
+                          sku={variant.sku}
+                          size={variant.size}
+                          color={variant.color}
+                          currentQuantity={qty}
+                          reserved={res}
+                        />
                       </td>
                     </tr>
                   );
