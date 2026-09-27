@@ -35,9 +35,12 @@ export default async function AdminDashboardLayout({
           >
             Inventory
           </Link>
-          <div className="block px-3 py-2 text-gray-600 rounded-sm text-sm font-medium cursor-not-allowed">
-            Orders (Soon)
-          </div>
+          <Link
+            href="/admin/orders"
+            className="block px-3 py-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-sm text-sm font-medium transition-colors"
+          >
+            Orders
+          </Link>
         </nav>
         <div className="p-4 border-t border-gray-800">
           <form
