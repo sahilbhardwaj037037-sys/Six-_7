@@ -28,6 +28,7 @@ export default async function AdminInventoryPage() {
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SKU</th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Size / Color</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Variant Status</th>
                 <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
                 <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Reserved</th>
                 <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Available</th>
@@ -36,7 +37,7 @@ export default async function AdminInventoryPage() {
             <tbody className="bg-white divide-y divide-gray-200">
               {variants.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-sm text-gray-500">
+                  <td colSpan={7} className="px-6 py-12 text-center text-sm text-gray-500">
                     No inventory records found.
                   </td>
                 </tr>
@@ -45,13 +46,21 @@ export default async function AdminInventoryPage() {
                   const qty = variant.inventory?.quantity ?? 0;
                   const res = variant.inventory?.reserved ?? 0;
                   const available = Math.max(0, qty - res);
-                  const isArchived = variant.product.isArchived;
+                  const isProductArchived = variant.product.isArchived;
+                  const isVariantArchived = variant.isArchived;
 
                   return (
-                    <tr key={variant.id} className={`hover:bg-gray-50 ${isArchived ? 'opacity-60 bg-gray-50' : ''}`}>
+                    <tr
+                      key={variant.id}
+                      className={`hover:bg-gray-50 ${isVariantArchived || isProductArchived ? 'opacity-60 bg-gray-50' : ''}`}
+                    >
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {variant.product.name}
-                        {isArchived && <span className="ml-2 inline-flex items-center rounded-full bg-yellow-50 px-2 py-0.5 text-xs font-medium text-yellow-800 ring-1 ring-inset ring-yellow-600/20">Archived</span>}
+                        {isProductArchived && (
+                          <span className="ml-2 inline-flex items-center rounded-full bg-yellow-50 px-2 py-0.5 text-xs font-medium text-yellow-800 ring-1 ring-inset ring-yellow-600/20">
+                            Product Archived
+                          </span>
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {variant.sku}
@@ -69,6 +78,17 @@ export default async function AdminInventoryPage() {
                           )}
                           <span>{variant.color}</span>
                         </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <span
+                          className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${
+                            isVariantArchived
+                              ? 'bg-gray-100 text-gray-600 ring-gray-500/10'
+                              : 'bg-green-50 text-green-700 ring-green-600/20'
+                          }`}
+                        >
+                          {isVariantArchived ? 'Archived' : 'Active'}
+                        </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-right text-gray-900">
                         {qty}
