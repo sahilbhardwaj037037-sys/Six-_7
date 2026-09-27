@@ -168,6 +168,7 @@ model Product {
 }
 
 model ProductVariant {
+  isArchived Boolean @default(false)
   id       String  @id @default(cuid())
   sku      String  @unique
   size     String
