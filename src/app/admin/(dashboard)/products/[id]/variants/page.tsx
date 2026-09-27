@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getAdminProductById, getAdminProductVariants } from "@/lib/services/admin-catalog";
+import { updateVariantArchiveStatus } from "@/lib/actions/admin-products";
 
 export default async function AdminProductVariantsPage({
   params,
@@ -17,6 +18,14 @@ export default async function AdminProductVariantsPage({
 
   // Fetch variants using our new read-only service
   const variants = await getAdminProductVariants(id);
+
+  // Wrapper Server Action to satisfy React's strict Promise<void> form typing
+  async function toggleVariant(formData: FormData) {
+    "use server";
+    const variantId = formData.get("variantId") as string;
+    const isArchived = formData.get("isArchived") === "true";
+    await updateVariantArchiveStatus(variantId, !isArchived);
+  }
 
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">
@@ -62,18 +71,19 @@ export default async function AdminProductVariantsPage({
                 <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Price (Override)</th>
                 <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
                 <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Reserved</th>
+                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Status & Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {variants.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-sm text-gray-500">
+                  <td colSpan={7} className="px-6 py-12 text-center text-sm text-gray-500">
                     No variants currently exist for this product.
                   </td>
                 </tr>
               ) : (
                 variants.map((variant) => (
-                  <tr key={variant.id} className="hover:bg-gray-50">
+                  <tr key={variant.id} className={`hover:bg-gray-50 ${variant.isArchived ? 'opacity-60 bg-gray-50' : ''}`}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {variant.sku}
                     </td>
@@ -106,6 +116,20 @@ export default async function AdminProductVariantsPage({
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
                       {variant.inventory?.reserved ?? 0}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
+                      <div className="flex items-center justify-end gap-4">
+                        <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${variant.isArchived ? 'bg-gray-100 text-gray-600 ring-gray-500/10' : 'bg-green-50 text-green-700 ring-green-600/20'}`}>
+                          {variant.isArchived ? 'Archived' : 'Active'}
+                        </span>
+                        <form action={toggleVariant}>
+                          <input type="hidden" name="variantId" value={variant.id} />
+                          <input type="hidden" name="isArchived" value={String(variant.isArchived)} />
+                          <button type="submit" className="text-blue-600 hover:text-blue-900 font-medium">
+                            {variant.isArchived ? 'Restore' : 'Archive'}
+                          </button>
+                        </form>
+                      </div>
                     </td>
                   </tr>
                 ))

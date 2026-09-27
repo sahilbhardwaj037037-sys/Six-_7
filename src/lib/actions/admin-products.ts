@@ -215,3 +215,32 @@ export async function createProductVariant(productId: string, formData: FormData
     return { error: "Failed to create product variant. Please try again." };
   }
 }
+
+export async function updateVariantArchiveStatus(variantId: string, isArchived: boolean) {
+  try {
+    await requireAdmin();
+
+    const existingVariant = await prisma.productVariant.findUnique({
+      where: { id: variantId },
+      select: { id: true, productId: true, isArchived: true },
+    });
+
+    if (!existingVariant) {
+      return { success: false, error: "Variant not found" };
+    }
+
+    await prisma.productVariant.update({
+      where: { id: variantId },
+      data: { isArchived },
+    });
+
+    revalidatePath(`/admin/products/${existingVariant.productId}/variants`);
+    revalidatePath(`/admin/products/${existingVariant.productId}/edit`);
+    revalidatePath(`/admin/products`);
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Failed to update variant archive status:", error);
+    return { success: false, error: error.message || "Failed to update variant archive status" };
+  }
+}

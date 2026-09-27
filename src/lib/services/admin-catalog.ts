@@ -75,6 +75,7 @@ export async function getAdminProductVariants(productId: string) {
       colorHex: true,
       price: true,
       createdAt: true,
+      isArchived: true,
       inventory: {
         select: {
           id: true,
