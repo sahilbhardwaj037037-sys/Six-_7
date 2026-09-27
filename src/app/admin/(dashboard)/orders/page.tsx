@@ -1,5 +1,6 @@
 import { requireAdmin } from "@/lib/admin-auth";
 import { getAllAdminOrders } from "@/lib/services/admin-orders";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -99,7 +100,12 @@ export default async function AdminOrdersPage() {
                   return (
                     <tr key={order.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {order.orderNumber}
+                        <Link
+                          href={`/admin/orders/${order.id}`}
+                          className="hover:underline hover:text-black transition-colors"
+                        >
+                          {order.orderNumber}
+                        </Link>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {formatDate(order.createdAt)}
