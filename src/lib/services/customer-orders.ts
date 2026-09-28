@@ -13,6 +13,7 @@ export async function getCustomerOrders(userId: string) {
     include: {
       items: true,
       payment: true,
+      shipment: true,
     },
   });
 }
@@ -34,6 +35,7 @@ export async function getCustomerOrderById(
     include: {
       items: true,
       payment: true,
+      shipment: true,
     },
   });
 }

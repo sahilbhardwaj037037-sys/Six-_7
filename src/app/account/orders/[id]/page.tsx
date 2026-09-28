@@ -94,7 +94,75 @@ export default async function CustomerOrderDetailPage({ params }: OrderDetailPag
           </div>
         </div>
 
-        {/* Itemized Order Line Items (Authoritative Historical Snapshot) */}
+                  {/* Delivery & Tracking Details (Rendered conditionally when shipment exists) */}
+          {order.shipment && (
+            <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-6 sm:p-8 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-neutral-100 dark:border-neutral-800 pb-4">
+                <div>
+                  <span className="text-xs font-semibold tracking-wider uppercase text-neutral-400 dark:text-neutral-500">
+                    Fulfillment & Shipping
+                  </span>
+                  <h2 className="text-lg font-bold text-neutral-900 dark:text-white mt-0.5">
+                    Delivery & Tracking
+                  </h2>
+                </div>
+                {(order.status === "SHIPPED" || order.status === "DELIVERED") && (
+                  <span className={`self-start sm:self-auto text-xs px-3 py-1 rounded-full border font-semibold ${getStatusBadge(order.status)}`}>
+                    Shipment: {order.status}
+                  </span>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pt-1 text-sm">
+                <div>
+                  <span className="text-xs font-mono uppercase tracking-wider text-neutral-400 dark:text-neutral-500 block">
+                    Shipping Carrier
+                  </span>
+                  <p className="font-medium text-neutral-900 dark:text-white mt-1">
+                    {order.shipment.carrier || "Standard Carrier"}
+                  </p>
+                </div>
+
+                <div>
+                  <span className="text-xs font-mono uppercase tracking-wider text-neutral-400 dark:text-neutral-500 block">
+                    Tracking Number
+                  </span>
+                  <p className="font-mono font-medium text-neutral-900 dark:text-white mt-1">
+                    {order.shipment.trackingNumber || "Not available"}
+                  </p>
+                </div>
+
+                {order.shipment.trackingUrl && (
+                  <div className="sm:col-span-2 md:col-span-1">
+                    <span className="text-xs font-mono uppercase tracking-wider text-neutral-400 dark:text-neutral-500 block">
+                      Tracking Link
+                    </span>
+                    <a
+                      href={order.shipment.trackingUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 mt-1 text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 underline underline-offset-4 transition-colors"
+                    >
+                      Track Package ↗
+                    </a>
+                  </div>
+                )}
+              </div>
+
+              {order.shipment.shippedAt && (
+                <div className="text-xs text-neutral-400 dark:text-neutral-500 font-mono pt-2 border-t border-neutral-100 dark:border-neutral-800">
+                  Dispatched on{" "}
+                  {new Date(order.shipment.shippedAt).toLocaleDateString("en-IN", {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Itemized Order Line Items (Authoritative Historical Snapshot) */}
         <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl overflow-hidden">
           <div className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-800">
             <h2 className="text-base font-semibold text-neutral-900 dark:text-white">Ordered Items</h2>
