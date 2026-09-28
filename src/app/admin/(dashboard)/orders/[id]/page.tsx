@@ -1,3 +1,4 @@
+import { OrderFulfillmentSection } from "./OrderFulfillmentSection";
 import { OrderStatusActions } from "./OrderStatusActions";
 import { requireAdmin } from "@/lib/admin-auth";
 import { getAdminOrderById } from "@/lib/services/admin-orders";
@@ -80,6 +81,9 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
       <div className="space-y-3">
         {/* Admin Order Status Lifecycle Management */}
         <OrderStatusActions orderId={order.id} currentStatus={order.status} paymentStatus={order.paymentStatus} />
+        {/* Admin Fulfillment & Shipment Details Section */}
+        <OrderFulfillmentSection orderId={order.id} orderStatus={order.status} shipment={order.shipment} />
+
 
         <div>
           <Link

@@ -326,7 +326,8 @@ model Order {
   shippingCountry    String        @default("IN")
 
   items              OrderItem[]
-  payment            Payment?
+  payment Payment?
+  shipment Shipment?
 
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt
@@ -375,4 +376,20 @@ model Payment {
 
   @@index([providerPaymentId])
   @@index([providerSessionId])
+}
+
+model Shipment {
+  id             String    @id @default(cuid())
+  orderId        String    @unique
+  order          Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  carrier        String?
+  trackingNumber String?
+  trackingUrl    String?
+
+  shippedAt      DateTime?
+  deliveredAt    DateTime?
+
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 }

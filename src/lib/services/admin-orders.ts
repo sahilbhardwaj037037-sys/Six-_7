@@ -87,6 +87,7 @@ export async function getAdminOrderById(id: string) {
           updatedAt: true,
         },
       },
+      shipment: true,
     },
   });
 }
