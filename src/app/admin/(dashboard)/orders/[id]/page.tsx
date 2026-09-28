@@ -1,3 +1,4 @@
+import { OrderStatusActions } from "./OrderStatusActions";
 import { requireAdmin } from "@/lib/admin-auth";
 import { getAdminOrderById } from "@/lib/services/admin-orders";
 import { notFound } from "next/navigation";
@@ -77,6 +78,9 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
     <div className="max-w-7xl mx-auto space-y-6">
       {/* Navigation & Header */}
       <div className="space-y-3">
+        {/* Admin Order Status Lifecycle Management */}
+        <OrderStatusActions orderId={order.id} currentStatus={order.status} paymentStatus={order.paymentStatus} />
+
         <div>
           <Link
             href="/admin/orders"
