@@ -8,6 +8,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { useCart } from "@/context/CartContext";
 import { addAddress } from "@/lib/actions/address";
+import { createPendingOrder } from "@/lib/actions/checkout";
 import type { Address } from "@/generated/prisma/client";
 import {
   MapPin,
@@ -18,6 +19,7 @@ import {
   ArrowLeft,
   AlertTriangle,
   Loader2,
+  CheckCircle2,
 } from "lucide-react";
 
 interface CheckoutClientProps {
@@ -38,7 +40,7 @@ export default function CheckoutClient({
   userEmail,
 }: CheckoutClientProps) {
   const router = useRouter();
-  const { items, totalItems, subtotal, isHydrated } = useCart();
+  const { items, totalItems, subtotal, isHydrated, clearCart } = useCart();
 
   const [addresses, setAddresses] = useState<Address[]>(initialAddresses);
   const [selectedAddressId, setSelectedAddressId] = useState<string>(
@@ -50,6 +52,15 @@ export default function CheckoutClient({
   );
   const [isSubmittingAddress, setIsSubmittingAddress] = useState(false);
   const [addressError, setAddressError] = useState<string | null>(null);
+
+  // Order submission states
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const [createdOrder, setCreatedOrder] = useState<{
+    orderId: string;
+    orderNumber: string;
+    total: number;
+  } | null>(null);
 
   const [newAddress, setNewAddress] = useState({
     fullName: "",
@@ -104,6 +115,39 @@ export default function CheckoutClient({
     }
   };
 
+  const handlePlaceOrder = async () => {
+    if (isPlacingOrder) return;
+    if (!selectedAddressId) {
+      setCheckoutError("Please select or add a shipping address.");
+      return;
+    }
+
+    setCheckoutError(null);
+    setIsPlacingOrder(true);
+
+    try {
+      const res = await createPendingOrder(selectedAddressId);
+      if (res.error) {
+        setCheckoutError(res.error);
+        setIsPlacingOrder(false);
+        return;
+      }
+
+      if (res.success && res.orderId && res.orderNumber) {
+        clearCart();
+        setCreatedOrder({
+          orderId: res.orderId,
+          orderNumber: res.orderNumber,
+          total: res.total ?? subtotal,
+        });
+      }
+    } catch {
+      setCheckoutError("Failed to create order. Please try again.");
+    } finally {
+      setIsPlacingOrder(false);
+    }
+  };
+
   const hasArchivedItems = items.some((item) => item.isArchived);
 
   return (
@@ -121,16 +165,68 @@ export default function CheckoutClient({
               Signed in as {userEmail}
             </p>
           </div>
-          <Link
-            href="/cart"
-            className="inline-flex items-center gap-1.5 text-xs font-mono text-neutral-600 hover:text-neutral-950 uppercase tracking-wider transition-colors"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            Back to Bag
-          </Link>
+          {!createdOrder && (
+            <Link
+              href="/cart"
+              className="inline-flex items-center gap-1.5 text-xs font-mono text-neutral-600 hover:text-neutral-950 uppercase tracking-wider transition-colors"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              Back to Bag
+            </Link>
+          )}
         </div>
 
-        {!isHydrated ? (
+        {/* Order Confirmation Screen */}
+        {createdOrder ? (
+          <div className="max-w-2xl mx-auto bg-white border border-neutral-200 p-8 sm:p-12 text-center space-y-6">
+            <div className="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center mx-auto text-emerald-600">
+              <CheckCircle2 className="w-6 h-6" />
+            </div>
+
+            <div>
+              <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-sm border border-emerald-200">
+                Order Pending Confirmation
+              </span>
+              <h2 className="text-2xl font-light tracking-tight text-neutral-950 uppercase font-mono mt-4">
+                {createdOrder.orderNumber}
+              </h2>
+              <p className="text-xs text-neutral-500 font-mono mt-2">
+                Order created and inventory stock reserved successfully.
+              </p>
+            </div>
+
+            <div className="py-4 border-y border-neutral-100 flex justify-between items-center text-xs font-mono">
+              <span className="text-neutral-500 uppercase">Authoritative Total</span>
+              <span className="text-base font-semibold text-neutral-950">
+                {formatPrice(createdOrder.total)}
+              </span>
+            </div>
+
+            <div className="p-4 bg-neutral-50 border border-neutral-200 rounded-sm text-left space-y-2">
+              <p className="text-xs font-mono text-neutral-700 font-medium uppercase tracking-wider">
+                What happens next?
+              </p>
+              <p className="text-xs text-neutral-600 font-mono leading-relaxed">
+                Your order is currently recorded with status <strong>PENDING</strong> and stock is safely allocated in the warehouse. In the next milestone, Stripe Test Mode payment processing will be connected to finalize your purchase.
+              </p>
+            </div>
+
+            <div className="pt-2 flex flex-col sm:flex-row gap-3 justify-center">
+              <Link
+                href="/shop"
+                className="px-8 py-3 bg-neutral-950 text-white text-xs font-mono uppercase tracking-widest hover:bg-neutral-800 transition-colors"
+              >
+                Continue Shopping
+              </Link>
+              <Link
+                href="/"
+                className="px-8 py-3 border border-neutral-200 text-neutral-700 text-xs font-mono uppercase tracking-widest hover:text-neutral-950 transition-colors"
+              >
+                Return Home
+              </Link>
+            </div>
+          </div>
+        ) : !isHydrated ? (
           <div className="py-24 text-center">
             <div className="text-xs font-mono text-neutral-400 uppercase tracking-widest animate-pulse">
               Loading Checkout Details...
@@ -158,6 +254,21 @@ export default function CheckoutClient({
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-start">
             {/* Left Column: Delivery Address Selection & Form (7 cols) */}
             <div className="lg:col-span-7 space-y-8">
+              {/* Checkout Error Alert */}
+              {checkoutError && (
+                <div className="p-4 border border-red-300 bg-red-50 rounded-sm flex items-start gap-3 text-red-900">
+                  <AlertTriangle className="w-5 h-5 flex-shrink-0 text-red-600 mt-0.5" />
+                  <div className="text-xs font-mono">
+                    <p className="font-semibold uppercase tracking-wider">
+                      Unable to Complete Checkout
+                    </p>
+                    <p className="mt-1 text-red-800 leading-relaxed">
+                      {checkoutError}
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {/* Unavailable / Archived Items Warning */}
               {hasArchivedItems && (
                 <div className="p-4 border border-amber-300 bg-amber-50 rounded-sm flex items-start gap-3 text-amber-900">
@@ -476,10 +587,6 @@ export default function CheckoutClient({
                 </div>
 
                 {/* Financial Review Breakdown */}
-                {/* ========================================================= */}
-                {/* REVIEW UI ONLY: Step 2 will execute authoritative server-side */}
-                {/* recalculation, inventory reservation, and order creation.    */}
-                {/* ========================================================= */}
                 <div className="border-t border-neutral-200 pt-4 mt-4 space-y-2.5 text-xs font-mono">
                   <div className="flex justify-between text-neutral-600">
                     <span>Subtotal</span>
@@ -503,18 +610,28 @@ export default function CheckoutClient({
                   </div>
                 </div>
 
-                {/* Continue Action Button (Disabled for Step 1 UI) */}
+                {/* Place Order CTA Button */}
                 <div className="pt-6 border-t border-neutral-200 mt-6">
                   <button
                     type="button"
-                    disabled
-                    className="w-full py-4 px-6 bg-neutral-950 text-white text-xs font-mono uppercase tracking-widest flex items-center justify-center gap-2 opacity-50 cursor-not-allowed"
+                    onClick={handlePlaceOrder}
+                    disabled={isPlacingOrder || !selectedAddressId || hasArchivedItems}
+                    className="w-full py-4 px-6 bg-neutral-950 text-white text-xs font-mono uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
-                    Continue to Payment
-                    <ArrowRight className="w-3.5 h-3.5" />
+                    {isPlacingOrder ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Reserving Stock & Placing Order...
+                      </>
+                    ) : (
+                      <>
+                        Place Pending Order
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </>
+                    )}
                   </button>
                   <p className="text-[10px] font-mono text-neutral-400 text-center mt-2.5 uppercase tracking-wider">
-                    Step 2: Order creation & Stripe payment coming in next milestone
+                    Creates order & reserves warehouse inventory (Stripe payment in next milestone)
                   </p>
                 </div>
               </div>
