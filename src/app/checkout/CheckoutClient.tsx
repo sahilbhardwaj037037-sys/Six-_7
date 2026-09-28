@@ -9,6 +9,7 @@ import { Footer } from "@/components/layout/Footer";
 import { useCart } from "@/context/CartContext";
 import { addAddress } from "@/lib/actions/address";
 import { createPendingOrder } from "@/lib/actions/checkout";
+import { createStripeCheckoutSession } from "@/lib/actions/stripe";
 import type { Address } from "@/generated/prisma/client";
 import {
   MapPin,
@@ -20,6 +21,7 @@ import {
   AlertTriangle,
   Loader2,
   CheckCircle2,
+  CreditCard,
 } from "lucide-react";
 
 interface CheckoutClientProps {
@@ -53,9 +55,12 @@ export default function CheckoutClient({
   const [isSubmittingAddress, setIsSubmittingAddress] = useState(false);
   const [addressError, setAddressError] = useState<string | null>(null);
 
-  // Order submission states
+  // Order submission & payment states
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+  const [isRedirectingToStripe, setIsRedirectingToStripe] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const [stripeError, setStripeError] = useState<string | null>(null);
+
   const [createdOrder, setCreatedOrder] = useState<{
     orderId: string;
     orderNumber: string;
@@ -116,16 +121,18 @@ export default function CheckoutClient({
   };
 
   const handlePlaceOrder = async () => {
-    if (isPlacingOrder) return;
+    if (isPlacingOrder || isRedirectingToStripe) return;
     if (!selectedAddressId) {
       setCheckoutError("Please select or add a shipping address.");
       return;
     }
 
     setCheckoutError(null);
+    setStripeError(null);
     setIsPlacingOrder(true);
 
     try {
+      // Step 2: Create Pending Order and reserve stock
       const res = await createPendingOrder(selectedAddressId);
       if (res.error) {
         setCheckoutError(res.error);
@@ -135,16 +142,48 @@ export default function CheckoutClient({
 
       if (res.success && res.orderId && res.orderNumber) {
         clearCart();
-        setCreatedOrder({
+        const orderData = {
           orderId: res.orderId,
           orderNumber: res.orderNumber,
           total: res.total ?? subtotal,
-        });
+        };
+        setCreatedOrder(orderData);
+        setIsPlacingOrder(false);
+
+        // Step 3: Trigger Stripe Checkout Session creation and redirect
+        setIsRedirectingToStripe(true);
+        const stripeRes = await createStripeCheckoutSession(res.orderId);
+        if (stripeRes.error) {
+          setStripeError(stripeRes.error);
+          setIsRedirectingToStripe(false);
+        } else if (stripeRes.sessionUrl) {
+          window.location.href = stripeRes.sessionUrl;
+        }
       }
     } catch {
       setCheckoutError("Failed to create order. Please try again.");
-    } finally {
       setIsPlacingOrder(false);
+      setIsRedirectingToStripe(false);
+    }
+  };
+
+  const handleProceedToPayment = async () => {
+    if (!createdOrder?.orderId || isRedirectingToStripe) return;
+
+    setStripeError(null);
+    setIsRedirectingToStripe(true);
+
+    try {
+      const res = await createStripeCheckoutSession(createdOrder.orderId);
+      if (res.error) {
+        setStripeError(res.error);
+        setIsRedirectingToStripe(false);
+      } else if (res.sessionUrl) {
+        window.location.href = res.sessionUrl;
+      }
+    } catch {
+      setStripeError("Unable to redirect to payment. Please try again.");
+      setIsRedirectingToStripe(false);
     }
   };
 
@@ -185,13 +224,13 @@ export default function CheckoutClient({
 
             <div>
               <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-sm border border-emerald-200">
-                Order Pending Confirmation
+                Order Placed · Payment Pending
               </span>
               <h2 className="text-2xl font-light tracking-tight text-neutral-950 uppercase font-mono mt-4">
                 {createdOrder.orderNumber}
               </h2>
               <p className="text-xs text-neutral-500 font-mono mt-2">
-                Order created and inventory stock reserved successfully.
+                Order created and warehouse inventory reserved. Complete payment to finalize.
               </p>
             </div>
 
@@ -202,27 +241,50 @@ export default function CheckoutClient({
               </span>
             </div>
 
+            {stripeError && (
+              <div className="p-4 border border-red-300 bg-red-50 rounded-sm text-left flex items-start gap-3 text-red-900">
+                <AlertTriangle className="w-5 h-5 flex-shrink-0 text-red-600 mt-0.5" />
+                <div className="text-xs font-mono">
+                  <p className="font-semibold uppercase tracking-wider">Payment Initialization Error</p>
+                  <p className="mt-1 text-red-800 leading-relaxed">{stripeError}</p>
+                </div>
+              </div>
+            )}
+
             <div className="p-4 bg-neutral-50 border border-neutral-200 rounded-sm text-left space-y-2">
-              <p className="text-xs font-mono text-neutral-700 font-medium uppercase tracking-wider">
-                What happens next?
+              <p className="text-xs font-mono text-neutral-700 font-medium uppercase tracking-wider flex items-center gap-2">
+                <CreditCard className="w-4 h-4 text-neutral-900" />
+                Stripe Test Mode Payment
               </p>
               <p className="text-xs text-neutral-600 font-mono leading-relaxed">
-                Your order is currently recorded with status <strong>PENDING</strong> and stock is safely allocated in the warehouse. In the next milestone, Stripe Test Mode payment processing will be connected to finalize your purchase.
+                You will be redirected to Stripe’s secure hosted checkout. Use any Stripe test card to complete payment. Your order and inventory reservation will remain <strong>PENDING</strong> until payment webhook confirmation in Step 4.
               </p>
             </div>
 
             <div className="pt-2 flex flex-col sm:flex-row gap-3 justify-center">
+              <button
+                type="button"
+                onClick={handleProceedToPayment}
+                disabled={isRedirectingToStripe}
+                className="px-8 py-3.5 bg-neutral-950 text-white text-xs font-mono uppercase tracking-widest hover:bg-neutral-800 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+              >
+                {isRedirectingToStripe ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    Redirecting to Stripe...
+                  </>
+                ) : (
+                  <>
+                    Pay {formatPrice(createdOrder.total)} with Stripe
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </>
+                )}
+              </button>
               <Link
                 href="/shop"
-                className="px-8 py-3 bg-neutral-950 text-white text-xs font-mono uppercase tracking-widest hover:bg-neutral-800 transition-colors"
+                className="px-8 py-3.5 border border-neutral-200 text-neutral-700 text-xs font-mono uppercase tracking-widest hover:text-neutral-950 transition-colors flex items-center justify-center"
               >
                 Continue Shopping
-              </Link>
-              <Link
-                href="/"
-                className="px-8 py-3 border border-neutral-200 text-neutral-700 text-xs font-mono uppercase tracking-widest hover:text-neutral-950 transition-colors"
-              >
-                Return Home
               </Link>
             </div>
           </div>
@@ -254,7 +316,6 @@ export default function CheckoutClient({
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-start">
             {/* Left Column: Delivery Address Selection & Form (7 cols) */}
             <div className="lg:col-span-7 space-y-8">
-              {/* Checkout Error Alert */}
               {checkoutError && (
                 <div className="p-4 border border-red-300 bg-red-50 rounded-sm flex items-start gap-3 text-red-900">
                   <AlertTriangle className="w-5 h-5 flex-shrink-0 text-red-600 mt-0.5" />
@@ -269,7 +330,6 @@ export default function CheckoutClient({
                 </div>
               )}
 
-              {/* Unavailable / Archived Items Warning */}
               {hasArchivedItems && (
                 <div className="p-4 border border-amber-300 bg-amber-50 rounded-sm flex items-start gap-3 text-amber-900">
                   <AlertTriangle className="w-5 h-5 flex-shrink-0 text-amber-600 mt-0.5" />
@@ -305,7 +365,6 @@ export default function CheckoutClient({
                   )}
                 </div>
 
-                {/* Saved Address Cards */}
                 {addresses.length > 0 && !showNewAddressForm && (
                   <div className="space-y-3">
                     {addresses.map((address) => {
@@ -360,7 +419,6 @@ export default function CheckoutClient({
                   </div>
                 )}
 
-                {/* Inline New Address Form */}
                 {showNewAddressForm && (
                   <form onSubmit={handleCreateAddress} className="space-y-4">
                     {addressError && (
@@ -549,7 +607,6 @@ export default function CheckoutClient({
                   </Link>
                 </div>
 
-                {/* Line Items List */}
                 <div className="divide-y divide-neutral-100 max-h-80 overflow-y-auto pr-1">
                   {items.map((item) => (
                     <div key={item.id} className="py-3 flex gap-3 text-xs">
@@ -586,7 +643,6 @@ export default function CheckoutClient({
                   ))}
                 </div>
 
-                {/* Financial Review Breakdown */}
                 <div className="border-t border-neutral-200 pt-4 mt-4 space-y-2.5 text-xs font-mono">
                   <div className="flex justify-between text-neutral-600">
                     <span>Subtotal</span>
@@ -610,12 +666,11 @@ export default function CheckoutClient({
                   </div>
                 </div>
 
-                {/* Place Order CTA Button */}
                 <div className="pt-6 border-t border-neutral-200 mt-6">
                   <button
                     type="button"
                     onClick={handlePlaceOrder}
-                    disabled={isPlacingOrder || !selectedAddressId || hasArchivedItems}
+                    disabled={isPlacingOrder || isRedirectingToStripe || !selectedAddressId || hasArchivedItems}
                     className="w-full py-4 px-6 bg-neutral-950 text-white text-xs font-mono uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     {isPlacingOrder ? (
@@ -623,15 +678,20 @@ export default function CheckoutClient({
                         <Loader2 className="w-4 h-4 animate-spin" />
                         Reserving Stock & Placing Order...
                       </>
+                    ) : isRedirectingToStripe ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Connecting to Stripe...
+                      </>
                     ) : (
                       <>
-                        Place Pending Order
+                        Continue to Stripe Payment
                         <ArrowRight className="w-3.5 h-3.5" />
                       </>
                     )}
                   </button>
                   <p className="text-[10px] font-mono text-neutral-400 text-center mt-2.5 uppercase tracking-wider">
-                    Creates order & reserves warehouse inventory (Stripe payment in next milestone)
+                    Creates pending order & launches Stripe Test Mode checkout
                   </p>
                 </div>
               </div>
