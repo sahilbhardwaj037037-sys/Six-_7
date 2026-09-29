@@ -3,196 +3,35 @@
 import { useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Package,
-  Truck,
-  CheckCircle2,
-  Clock,
-  Search,
-  ArrowRight,
-  AlertCircle,
-  HelpCircle,
-  Mail,
-  MapPin,
-  Calendar,
-  ExternalLink,
-  ShieldCheck,
-  RefreshCw,
-} from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-
-interface TimelineEvent {
-  title: string;
-  location: string;
-  time: string;
-  completed: boolean;
-  active?: boolean;
-}
-
-interface OrderItem {
-  id: string;
-  name: string;
-  variant: string;
-  size: string;
-  quantity: number;
-  price: string;
-}
-
-interface MockOrder {
-  orderNumber: string;
-  email: string;
-  status: "In Transit" | "Delivered" | "Processing";
-  statusDescription: string;
-  placedDate: string;
-  estimatedDelivery: string;
-  carrier: string;
-  trackingNumber: string;
-  destination: {
-    recipient: string;
-    city: string;
-    country: string;
-  };
-  items: OrderItem[];
-  timeline: TimelineEvent[];
-}
-
-const MOCK_ORDERS: Record<string, MockOrder> = {
-  "SX7-89241": {
-    orderNumber: "SX7-89241",
-    email: "clara.vance@example.com",
-    status: "In Transit",
-    statusDescription: "Consignment handed to DHL Express Hub, Leipzig. Outbound flight departed.",
-    placedDate: "September 09, 2026",
-    estimatedDelivery: "September 14, 2026 — End of Day",
-    carrier: "DHL Express Carbon-Neutral (DDP)",
-    trackingNumber: "JD0146000098421034",
-    destination: {
-      recipient: "Clara Vance",
-      city: "Stockholm, 114 34",
-      country: "Sweden",
-    },
-    items: [
-      {
-        id: "item-1",
-        name: "Phantom Low-Top Runner",
-        variant: "Matte Chalk / Obsidian",
-        size: "EU 42",
-        quantity: 1,
-        price: "$480",
-      },
-      {
-        id: "item-2",
-        name: "Architectural Dust Guard Kit",
-        variant: "Natural Canvas",
-        size: "Standard",
-        quantity: 1,
-        price: "$65",
-      },
-    ],
-    timeline: [
-      {
-        title: "Consignment In Transit",
-        location: "DHL European Air Hub — Leipzig, Germany",
-        time: "Sep 11, 2026 — 22:45 CET",
-        completed: true,
-        active: true,
-      },
-      {
-        title: "Export Customs Cleared (DDP)",
-        location: "Bologna Cargo Facility, Italy",
-        time: "Sep 10, 2026 — 18:15 CET",
-        completed: true,
-      },
-      {
-        title: "Dispatched from Atelier Guild",
-        location: "Montelupo Finishing Workshop, Tuscany",
-        time: "Sep 10, 2026 — 11:30 CET",
-        completed: true,
-      },
-      {
-        title: "Order Verified & Packed in Protective Casing",
-        location: "Six&7 Distribution Archive — Tuscany",
-        time: "Sep 09, 2026 — 16:20 CET",
-        completed: true,
-      },
-      {
-        title: "Order Placed & Payment Authorized",
-        location: "Digital Atelier Platform",
-        time: "Sep 09, 2026 — 14:02 CET",
-        completed: true,
-      },
-    ],
-  },
-  "SX7-64102": {
-    orderNumber: "SX7-64102",
-    email: "marcus.lind@example.com",
-    status: "Delivered",
-    statusDescription: "Signed for by M. LIND at residential reception with archival packaging intact.",
-    placedDate: "August 28, 2026",
-    estimatedDelivery: "Delivered September 01, 2026",
-    carrier: "DHL Express DDP (Signature Required)",
-    trackingNumber: "JD0146000078129045",
-    destination: {
-      recipient: "Marcus Lind",
-      city: "Copenhagen, 1260",
-      country: "Denmark",
-    },
-    items: [
-      {
-        id: "item-1",
-        name: "Monolith High Chelsea Boot",
-        variant: "Vachetta Black",
-        size: "EU 43",
-        quantity: 1,
-        price: "$620",
-      },
-    ],
-    timeline: [
-      {
-        title: "Delivered & Signed for",
-        location: "Copenhagen, Denmark",
-        time: "Sep 01, 2026 — 13:40 CET",
-        completed: true,
-        active: true,
-      },
-      {
-        title: "Out for Courier Delivery",
-        location: "København Depot, Denmark",
-        time: "Sep 01, 2026 — 08:15 CET",
-        completed: true,
-      },
-      {
-        title: "Arrival at Regional Hub",
-        location: "Kastrup Gateway, Denmark",
-        time: "Aug 31, 2026 — 21:00 CET",
-        completed: true,
-      },
-      {
-        title: "Dispatched from Tuscan Atelier",
-        location: "Montelupo Workshop, Italy",
-        time: "Aug 29, 2026 — 14:10 CET",
-        completed: true,
-      },
-      {
-        title: "Order Placed & Confirmed",
-        location: "Digital Atelier Platform",
-        time: "Aug 28, 2026 — 19:12 CET",
-        completed: true,
-      },
-    ],
-  },
-};
+import {
+  Search,
+  Package,
+  Truck,
+  Calendar,
+  AlertCircle,
+  ShieldCheck,
+  Mail,
+  HelpCircle,
+  ArrowRight,
+  RefreshCw,
+  ExternalLink,
+} from "lucide-react";
+import {
+  trackOrderAction,
+  type PublicTrackOrderDTO,
+} from "@/lib/actions/track-order";
 
 export default function TrackOrderPage() {
   const [orderNumber, setOrderNumber] = useState("");
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
-  const [activeOrder, setActiveOrder] = useState<MockOrder | null>(null);
+  const [activeOrder, setActiveOrder] = useState<PublicTrackOrderDTO | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
 
-  const handleTrack = (e: React.FormEvent) => {
+  const handleTrack = async (e: React.FormEvent) => {
     e.preventDefault();
     setValidationError(null);
 
@@ -200,7 +39,7 @@ export default function TrackOrderPage() {
     const cleanEmail = email.trim().toLowerCase();
 
     if (!cleanOrder) {
-      setValidationError("Please enter your SX7 order identifier (e.g., SX7-89241).");
+      setValidationError("Please enter your Six&7 order identifier (e.g., S67-...).");
       return;
     }
 
@@ -209,7 +48,6 @@ export default function TrackOrderPage() {
       return;
     }
 
-    // Basic email format check
     if (!cleanEmail.includes("@") || !cleanEmail.includes(".")) {
       setValidationError("Please enter a valid email address.");
       return;
@@ -217,34 +55,20 @@ export default function TrackOrderPage() {
 
     setIsLoading(true);
     setHasSearched(true);
+    setActiveOrder(null);
 
-    // Simulate luxury fulfillment lookup delay
-    setTimeout(() => {
-      setIsLoading(false);
-      const matched = MOCK_ORDERS[cleanOrder];
-      if (matched && matched.email.toLowerCase() === cleanEmail) {
-        setActiveOrder(matched);
-      } else if (matched) {
-        // Order exists but email mismatch
-        setActiveOrder(null);
-        setValidationError("The order identifier was found, but the associated email address does not match our records.");
+    try {
+      const res = await trackOrderAction(cleanOrder, cleanEmail);
+      if (res.success && res.data) {
+        setActiveOrder(res.data);
       } else {
         setActiveOrder(null);
       }
-    }, 700);
-  };
-
-  const loadPreset = (presetOrder: string, presetEmail: string) => {
-    setOrderNumber(presetOrder);
-    setEmail(presetEmail);
-    setValidationError(null);
-    setIsLoading(true);
-    setHasSearched(true);
-
-    setTimeout(() => {
+    } catch {
+      setActiveOrder(null);
+    } finally {
       setIsLoading(false);
-      setActiveOrder(MOCK_ORDERS[presetOrder] || null);
-    }, 450);
+    }
   };
 
   return (
@@ -277,9 +101,8 @@ export default function TrackOrderPage() {
                 </h1>
 
                 <p className="text-base sm:text-lg text-neutral-600 font-light leading-relaxed max-w-2xl">
-                  Real-time telemetry for footwear dispatched from our Tuscan finishing
-                  workshop and European distribution archives. Enter your reference
-                  number and order email below.
+                  Real-time telemetry for footwear dispatched from our workshop archives.
+                  Enter your order reference number and checkout email below.
                 </p>
               </div>
 
@@ -315,13 +138,13 @@ export default function TrackOrderPage() {
                   <input
                     id="orderNumber"
                     type="text"
-                    placeholder="e.g. SX7-89241"
+                    placeholder="e.g. S67-MUKQYUU8-14B2C5"
                     value={orderNumber}
                     onChange={(e) => setOrderNumber(e.target.value)}
                     className="w-full bg-neutral-50 border border-neutral-200 px-4 py-3 text-xs sm:text-sm text-neutral-900 font-mono focus:outline-none focus:border-neutral-900 uppercase transition-colors"
                   />
                   <span className="text-[11px] text-neutral-400 font-light mt-1.5 block">
-                    Found on your order confirmation email and dispatch slip.
+                    Found on your order confirmation email and dispatch receipt.
                   </span>
                 </div>
 
@@ -335,7 +158,7 @@ export default function TrackOrderPage() {
                   <input
                     id="email"
                     type="email"
-                    placeholder="e.g. clara.vance@example.com"
+                    placeholder="e.g. customer@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full bg-neutral-50 border border-neutral-200 px-4 py-3 text-xs sm:text-sm text-neutral-900 focus:outline-none focus:border-neutral-900 transition-colors font-sans"
@@ -378,29 +201,6 @@ export default function TrackOrderPage() {
                 </button>
               </div>
             </form>
-
-            {/* Quick Demo Previews */}
-            <div className="mt-8 pt-6 border-t border-neutral-100">
-              <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 block mb-2">
-                Demo Verification Presets:
-              </span>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => loadPreset("SX7-89241", "clara.vance@example.com")}
-                  className="px-3 py-1.5 border border-neutral-200 text-[11px] font-mono text-neutral-700 bg-neutral-50 hover:bg-neutral-100 hover:border-neutral-400 transition-colors"
-                >
-                  Load In-Transit Demo (SX7-89241)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => loadPreset("SX7-64102", "marcus.lind@example.com")}
-                  className="px-3 py-1.5 border border-neutral-200 text-[11px] font-mono text-neutral-700 bg-neutral-50 hover:bg-neutral-100 hover:border-neutral-400 transition-colors"
-                >
-                  Load Delivered Demo (SX7-64102)
-                </button>
-              </div>
-            </div>
           </div>
         </section>
 
@@ -417,7 +217,7 @@ export default function TrackOrderPage() {
               >
                 <div className="w-10 h-10 border-2 border-neutral-300 border-t-neutral-900 rounded-full animate-spin mx-auto" />
                 <p className="font-mono text-xs uppercase tracking-widest text-neutral-500">
-                  Contacting Carrier Telemetry Gateway...
+                  Querying Logistics Dispatch Records...
                 </p>
               </motion.div>
             )}
@@ -437,9 +237,8 @@ export default function TrackOrderPage() {
                   No Consignment Records Found
                 </h3>
                 <p className="text-xs sm:text-sm text-neutral-500 font-light max-w-md mx-auto leading-relaxed">
-                  We could not locate an active dispatch matching the supplied reference
-                  number and email combination. Please confirm the characters on your
-                  original confirmation notice.
+                  We could not locate an active consignment matching the supplied reference
+                  number and email combination.
                 </p>
                 <div className="pt-2 flex flex-wrap justify-center gap-4">
                   <Link
@@ -483,8 +282,10 @@ export default function TrackOrderPage() {
                         Status:{" "}
                         <span
                           className={
-                            activeOrder.status === "Delivered"
+                            activeOrder.status === "DELIVERED"
                               ? "text-emerald-700 font-normal"
+                              : activeOrder.status === "CANCELLED"
+                              ? "text-rose-700 font-normal"
                               : "text-neutral-900 font-normal"
                           }
                         >
@@ -492,17 +293,37 @@ export default function TrackOrderPage() {
                         </span>
                       </h3>
                       <p className="text-xs sm:text-sm text-neutral-500 font-light mt-1">
-                        {activeOrder.statusDescription}
+                        {activeOrder.status === "DELIVERED"
+                          ? "Package successfully delivered to destination address."
+                          : activeOrder.status === "SHIPPED"
+                          ? "Package in transit with logistics carrier."
+                          : activeOrder.status === "CANCELLED"
+                          ? "Order cancelled. Inventory holds released."
+                          : "Order confirmed and being prepared at the atelier."}
                       </p>
                     </div>
 
                     <div className="flex flex-wrap lg:flex-col items-start lg:items-end gap-3 text-right">
-                      <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-neutral-100 text-neutral-900 font-mono text-xs">
-                        <Calendar className="w-3.5 h-3.5 text-neutral-500" />
-                        <span>Est. Delivery: {activeOrder.estimatedDelivery}</span>
-                      </div>
+                      {activeOrder.shipment?.deliveredAt ? (
+                        <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200 font-mono text-xs">
+                          <Calendar className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>Delivered: {activeOrder.shipment.deliveredAt}</span>
+                        </div>
+                      ) : activeOrder.shipment?.shippedAt ? (
+                        <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-neutral-100 text-neutral-900 font-mono text-xs">
+                          <Calendar className="w-3.5 h-3.5 text-neutral-500" />
+                          <span>Dispatched: {activeOrder.shipment.shippedAt}</span>
+                        </div>
+                      ) : (
+                        <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-neutral-100 text-neutral-900 font-mono text-xs">
+                          <Calendar className="w-3.5 h-3.5 text-neutral-500" />
+                          <span>Placed: {activeOrder.placedDate}</span>
+                        </div>
+                      )}
                       <span className="text-[11px] font-mono text-neutral-400">
-                        Dispatched via {activeOrder.carrier}
+                        {activeOrder.shipment?.carrier
+                          ? `Dispatched via ${activeOrder.shipment.carrier}`
+                          : "Carrier: Pending Assignment"}
                       </span>
                     </div>
                   </div>
@@ -514,8 +335,19 @@ export default function TrackOrderPage() {
                         Carrier Tracking ID
                       </span>
                       <span className="font-mono text-neutral-900 break-all font-medium">
-                        {activeOrder.trackingNumber}
+                        {activeOrder.shipment?.trackingNumber || "Not available"}
                       </span>
+                      {activeOrder.shipment?.trackingUrl && (
+                        <a
+                          href={activeOrder.shipment.trackingUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-[11px] text-blue-600 hover:underline mt-1 font-mono"
+                        >
+                          <span>Track with Courier</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      )}
                     </div>
                     <div>
                       <span className="text-[10px] font-mono uppercase tracking-widest text-neutral-400 block mb-1">
@@ -538,10 +370,24 @@ export default function TrackOrderPage() {
                     </div>
                     <div>
                       <span className="text-[10px] font-mono uppercase tracking-widest text-neutral-400 block mb-1">
-                        Duties & Clearance
+                        Consignment Status
                       </span>
-                      <span className="text-emerald-700 font-medium font-mono">
-                        DDP Cleared (0.00 Balance)
+                      <span
+                        className={
+                          activeOrder.status === "DELIVERED"
+                            ? "text-emerald-700 font-medium font-mono"
+                            : activeOrder.status === "CANCELLED"
+                            ? "text-rose-700 font-medium font-mono"
+                            : "text-neutral-800 font-medium font-mono"
+                        }
+                      >
+                        {activeOrder.shipment
+                          ? activeOrder.shipment.deliveredAt
+                            ? "Delivered"
+                            : "In Transit"
+                          : activeOrder.status === "CANCELLED"
+                          ? "Cancelled"
+                          : "Preparing Dispatch"}
                       </span>
                     </div>
                   </div>
@@ -599,10 +445,11 @@ export default function TrackOrderPage() {
                                 {event.time}
                               </span>
                             </div>
-                            <div className="flex items-center gap-1.5 text-xs text-neutral-500 font-light">
-                              <MapPin className="w-3 h-3 text-neutral-400 shrink-0" />
-                              <span>{event.location}</span>
-                            </div>
+                            {event.description && (
+                              <p className="text-xs text-neutral-500 font-light">
+                                {event.description}
+                              </p>
+                            )}
                           </div>
                         </div>
                       ))}
@@ -626,16 +473,21 @@ export default function TrackOrderPage() {
 
                       <div className="divide-y divide-neutral-100">
                         {activeOrder.items.map((item) => (
-                          <div key={item.id} className="py-4 first:pt-0 last:pb-0 flex items-start justify-between gap-4">
+                          <div
+                            key={item.id}
+                            className="py-4 first:pt-0 last:pb-0 flex items-start justify-between gap-4"
+                          >
                             <div>
                               <h5 className="text-xs sm:text-sm font-medium text-neutral-900">
-                                {item.name}
+                                {item.productName}
                               </h5>
                               <p className="text-[11px] text-neutral-500 font-light mt-0.5">
-                                Variant: {item.variant}
+                                SKU: {item.sku}
                               </p>
                               <div className="flex items-center gap-3 font-mono text-[10px] text-neutral-400 mt-1.5">
                                 <span>Size: {item.size}</span>
+                                <span>•</span>
+                                <span>Color: {item.color}</span>
                                 <span>•</span>
                                 <span>Qty: {item.quantity}</span>
                               </div>
@@ -684,9 +536,8 @@ export default function TrackOrderPage() {
                   Encountering courier delays or routing discrepancies?
                 </h3>
                 <p className="text-xs sm:text-sm text-neutral-600 font-light leading-relaxed max-w-2xl">
-                  Our European client team maintains direct escalations with DHL Express
-                  logistics stations to re-route parcels, arrange hold-for-pickup, or update
-                  delivery authorization.
+                  Our client team maintains direct escalations with logistics stations to
+                  re-route parcels, arrange hold-for-pickup, or update delivery authorization.
                 </p>
               </div>
 
