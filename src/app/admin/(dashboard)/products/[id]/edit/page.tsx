@@ -1,8 +1,10 @@
+export const dynamic = "force-dynamic";
 import { requireAdmin } from "@/lib/admin-auth";
 import { getAdminProductById, getBrands, getCategories } from "@/lib/services/admin-catalog";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import ProductEditForm from "./edit-form";
+import { ProductMediaManager } from "@/components/admin/ProductMediaManager";
 
 export default async function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
   await requireAdmin();
@@ -23,7 +25,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
+    <div className="max-w-3xl mx-auto space-y-8 pb-12">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold tracking-tight text-gray-900">
           Edit Product: {product.name}
@@ -44,8 +46,21 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
         </div>
       </div>
 
+      {/* Base Product Information */}
       <div className="bg-white border border-gray-200 rounded-sm shadow-sm overflow-hidden">
         <ProductEditForm product={serializedProduct} brands={brands} categories={categories} />
+      </div>
+
+      {/* Product Media Management */}
+      <div className="bg-white border border-gray-200 rounded-sm shadow-sm overflow-hidden p-6">
+        <h2 className="text-base font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-100">
+          Product Media & Photos
+        </h2>
+        <ProductMediaManager
+          productId={product.id}
+          media={product.media}
+          variants={product.variants}
+        />
       </div>
     </div>
   );

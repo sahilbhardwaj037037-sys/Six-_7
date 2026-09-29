@@ -18,12 +18,13 @@ export default async function ProductPage({ params }: ProductPageProps) {
     notFound();
   }
 
-  // Generate gallery images (simulating multiple angles with unsplash placeholders if needed)
-  const galleryImages = [
-    product.imageUrl,
-    product.secondaryImageUrl || "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=800&q=80",
-    "https://images.unsplash.com/photo-1511556532299-8f662fc26c06?auto=format&fit=crop&w=800&q=80"
-  ];
+  // Dynamic gallery images derived from database ProductMedia records
+  const galleryImages = product.images && product.images.length > 0
+    ? product.images
+    : [
+        product.imageUrl,
+        product.secondaryImageUrl || "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=800&q=80",
+      ].filter(Boolean);
 
   // Find up to 4 related products (matching category or gender, excluding current)
   const relatedProducts = (await getProducts()).filter

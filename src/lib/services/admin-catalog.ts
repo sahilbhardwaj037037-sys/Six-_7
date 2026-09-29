@@ -60,6 +60,28 @@ export async function getAdminProductById(id: string) {
       category: {
         select: { id: true, name: true },
       },
+      media: {
+        orderBy: { order: "asc" },
+        include: {
+          variant: {
+            select: {
+              id: true,
+              sku: true,
+              color: true,
+              size: true,
+            },
+          },
+        },
+      },
+      variants: {
+        select: {
+          id: true,
+          sku: true,
+          size: true,
+          color: true,
+        },
+        orderBy: { createdAt: "asc" },
+      },
     },
   });
 }

@@ -46,6 +46,15 @@ export function mapProductToShopProduct(product: ProductWithRelations): ShopProd
     available: v.inventory ? (v.inventory.quantity - v.inventory.reserved) > 0 : false
   }));
 
+  // Collect all product and variant media in defined sequence
+  const allMediaUrls = product.media && product.media.length > 0
+    ? [...product.media].sort((a, b) => {
+        if (a.isMain && !b.isMain) return -1;
+        if (!a.isMain && b.isMain) return 1;
+        return a.order - b.order;
+      }).map(m => m.url)
+    : [mainMedia?.url || ""].filter(Boolean);
+
   return {
     id: product.id,
     slug: product.slug,
@@ -59,6 +68,7 @@ export function mapProductToShopProduct(product: ProductWithRelations): ShopProd
     badge: product.badge || undefined,
     imageUrl: mainMedia?.url || '',
     secondaryImageUrl: secondaryMedia?.url || undefined,
+    images: allMediaUrls,
     colorways: uniqueColorHexes,
     inStock,
     isNewArrival: product.isNewArrival,

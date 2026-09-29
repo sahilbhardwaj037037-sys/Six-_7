@@ -15,6 +15,7 @@ export interface ShopProduct {
   badge?: string;
   imageUrl: string;
   secondaryImageUrl?: string;
+  images?: string[];
   colorways: string[];
   inStock: boolean;
   isNewArrival?: boolean;
