@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import type Stripe from "stripe";
 import { getStripeServer } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
+import { expireOrderAndReleaseInventory } from "@/lib/services/order-expiry";
 
 export const dynamic = "force-dynamic";
 
@@ -56,6 +57,12 @@ export async function POST(req: NextRequest) {
         break;
       }
 
+      case "checkout.session.expired": {
+        const session = event.data.object as Stripe.Checkout.Session;
+        await handleExpiredCheckoutSession(session);
+        break;
+      }
+
       default:
         // Acknowledge unhandled event types cleanly to prevent Stripe retry storms
         break;
@@ -85,6 +92,9 @@ async function handleSuccessfulCheckoutSession(session: Stripe.Checkout.Session)
       : session.payment_intent?.id || null;
 
   await prisma.$transaction(async (tx) => {
+    // Acquire row lock to prevent race condition with expiry
+    await tx.$queryRaw`SELECT id FROM "Order" WHERE id = ${orderId} FOR UPDATE`;
+
     const order = await tx.order.findUnique({
       where: { id: orderId },
       include: { payment: true },
@@ -92,6 +102,14 @@ async function handleSuccessfulCheckoutSession(session: Stripe.Checkout.Session)
 
     if (!order) {
       console.warn(`[Stripe Webhook] Order record not found for ID: ${orderId}`);
+      return;
+    }
+
+    // Concurrency guard: A cancelled order must never be resurrected to PAID
+    if (order.status === "CANCELLED") {
+      console.warn(
+        `[Stripe Webhook] Late payment received for CANCELLED order: ${orderId}. Session: ${session.id}, PaymentIntent: ${providerPaymentId}`
+      );
       return;
     }
 
@@ -144,4 +162,31 @@ async function handleSuccessfulCheckoutSession(session: Stripe.Checkout.Session)
   revalidatePath("/admin/orders");
   revalidatePath(`/admin/orders/${orderId}`);
   revalidatePath("/checkout");
+}
+
+async function handleExpiredCheckoutSession(session: Stripe.Checkout.Session) {
+  let orderId = session.metadata?.orderId || session.client_reference_id;
+
+  // Fallback: Resolve via Payment record if metadata was lost
+  if (!orderId && session.id) {
+    const payment = await prisma.payment.findUnique({
+      where: { providerSessionId: session.id },
+      select: { orderId: true },
+    });
+    orderId = payment?.orderId ?? null;
+  }
+
+  if (!orderId) {
+    console.warn(`[Stripe Webhook] Could not resolve order for expired session: ${session.id}`);
+    return;
+  }
+
+  const result = await expireOrderAndReleaseInventory(
+    orderId,
+    `Stripe checkout session expired: ${session.id}`
+  );
+
+  if (!result.success) {
+    console.error(`[Stripe Webhook Expiry Error]: ${result.error}`);
+  }
 }

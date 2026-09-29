@@ -101,7 +101,10 @@ export async function createStripeCheckoutSession(orderId: string) {
       "http://localhost:3000";
 
     // 4. Create Stripe Checkout Session in Test Mode
+    const expiresAt = Math.floor(Date.now() / 1000) + 31 * 60;
+
     const checkoutSession = await stripe.checkout.sessions.create({
+      expires_at: expiresAt,
       mode: "payment",
       line_items: lineItems,
       customer_email: session.user?.email ?? undefined,
