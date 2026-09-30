@@ -1,19 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
   CheckCircle2,
   Clock,
   HelpCircle,
-  Mail,
-  MapPin,
-  MessageSquare,
   Send,
 } from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { submitInquiry } from "@/lib/actions/admin-inquiries";
 
 interface FormState {
   fullName: string;
@@ -83,19 +81,23 @@ const LOCATIONS = [
 
 export default function ContactPage() {
   const [formData, setFormData] = useState<FormState>(INITIAL_FORM);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
+    setErrorMessage(null);
 
-    // Simulate editorial API submission
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setIsSubmitted(true);
-      setFormData(INITIAL_FORM);
-    }, 600);
+    startTransition(async () => {
+      const res = await submitInquiry(formData);
+      if (!res.success) {
+        setErrorMessage(res.error || "Failed to submit inquiry.");
+      } else {
+        setIsSubmitted(true);
+        setFormData(INITIAL_FORM);
+      }
+    });
   };
 
   return (
@@ -224,6 +226,12 @@ export default function ContactPage() {
                   </p>
                 </div>
 
+                {errorMessage && (
+                  <div className="mb-6 p-4 text-xs text-red-800 bg-red-50 border border-red-200 rounded-sm">
+                    {errorMessage}
+                  </div>
+                )}
+
                 {isSubmitted ? (
                   <div className="py-12 text-center space-y-4">
                     <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto border border-emerald-200">
@@ -345,10 +353,10 @@ export default function ContactPage() {
                     <div>
                       <button
                         type="submit"
-                        disabled={isSubmitting}
+                        disabled={isPending}
                         className="w-full bg-neutral-950 text-white py-4 px-6 font-mono text-xs uppercase tracking-widest hover:bg-neutral-800 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
                       >
-                        {isSubmitting ? (
+                        {isPending ? (
                           <span>Transmitting Inquiry...</span>
                         ) : (
                           <>
